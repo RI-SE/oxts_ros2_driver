@@ -319,6 +319,75 @@ tf2::Matrix3x3 getRotEnuToLrf(double theta) {
                               0,        0, 1);
 }
 
+nav_msgs::msg::Odometry utm_odometry(const NComRxC *nrx,
+                                     const std_msgs::msg::Header &head, Lrf lrf) {
+  Point::Cart p_utm;
+  std::string utm_zone;
+  NavConversions::geodeticToUtm(nrx->mLat, nrx->mLon, nrx->mAlt,
+                                p_utm, utm_zone);
+
+  auto msg = nav_msgs::msg::Odometry();
+  msg.header = head;
+  msg.header.frame_id = "utm_" + utm_zone;
+  msg.child_frame_id = "oxts_link";
+  // pose with covariance ======================================================
+
+  // double central_meridian = NAV_CONST::DEG2RADS * getZoneMeridian(utm_zone);
+  int zone_number = std::atoi(utm_zone.substr(0,2).c_str());
+  double zone_meridian = NAV_CONST::DEG2RADS * ( (zone_number == 0) ? 0.0 : (zone_number - 1) * 6.0 - 177.0 );
+  double convergence_angle = atan(tan(NAV_CONST::DEG2RADS * nrx->mLon - zone_meridian) * sin(NAV_CONST::DEG2RADS * nrx->mLat));
+  double enu_heading = M_PI_2 - NAV_CONST::DEG2RADS * nrx->mHeading;
+
+  msg.pose.pose.position.x = p_utm.x();
+  msg.pose.pose.position.y = p_utm.y();
+  msg.pose.pose.position.z = p_utm.z();
+  auto utm2lrf = tf2::Quaternion(tf2::Vector3(0, 0, 1), enu_heading + convergence_angle);
+
+  msg.pose.pose.orientation.x = utm2lrf.x();
+  msg.pose.pose.orientation.y = utm2lrf.y();
+  msg.pose.pose.orientation.z = utm2lrf.z();
+  msg.pose.pose.orientation.w = utm2lrf.w();
+
+  // Covariance from NCom is in the NED local coordinate frame. This must be
+  // rotated into the LRF
+
+  // rotation from the ENU frame defined by the LRF origin to the full LRF frame
+  tf2::Matrix3x3 r_enu_lrf = getRotEnuToLrf(lrf.heading());
+  // rotation from ECEF frame to the ENU frame defined by the LRF origin
+  tf2::Matrix3x3 r_ecef_enu = getRotEnuToEcef(lrf.lat(), lrf.lon()).transpose();
+  // rotation from ECEF frame to the ENU frame defined by the current position
+  tf2::Matrix3x3 r_pos_ecef = getRotEnuToEcef(nrx->mLat, nrx->mLon);
+
+  auto diff = tf2::Matrix3x3(r_enu_lrf);
+  diff *= r_ecef_enu;
+  diff *= r_pos_ecef;
+
+  auto tmp = tf2::Matrix3x3(diff);
+  auto cov = tf2::Matrix3x3(std::pow(nrx->mEastAcc, 2), 0.0, 0.0,
+                            0.0, std::pow(nrx->mNorthAcc, 2), 0.0,
+                            0.0, 0.0, std::pow(nrx->mAltAcc, 2));
+  // cov_b = R * cov_a * R^T
+  tmp *= cov;
+  tmp *= diff.transpose();
+
+  // Copy the position covariance data into the output message
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      msg.pose.covariance[(6 * i) + j] = tmp[i][j];
+
+  // twist =====================================================================
+
+  auto twist_stamped = RosNComWrapper::velocity(nrx, head);
+  msg.twist.twist.linear = twist_stamped.twist.linear;
+  msg.twist.twist.angular.x = twist_stamped.twist.angular.x;
+  msg.twist.twist.angular.y = -twist_stamped.twist.angular.y;
+  msg.twist.twist.angular.z = -twist_stamped.twist.angular.z;
+
+  /** \todo Twist covariance */
+
+  return msg;
+}
+
 nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
                                  const std_msgs::msg::Header &head, Lrf lrf) {
   auto msg = nav_msgs::msg::Odometry();

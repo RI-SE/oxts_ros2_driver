@@ -22,6 +22,8 @@
 
 #include <math.h>
 #include <vector>
+#include <string>
+#include <gps_tools/conversions.h>
 
 #include "oxts_ins/nav_const.hpp"
 
@@ -172,6 +174,13 @@ Point::Cart enuToLrf(double xEast, double yNorth, double zUp,
  */
 Point::Cart geodeticToEnu(double lat, double lon, double h, double lat0,
                           double lon0, double alt0);
+
+/** Converts the geodetic WGS-84 coordinated (lat, lon, h) to
+ * Universal Transverse Mercator (UTM) coordinates and the corresponding
+ * UTM zone string.
+ */
+void geodeticToUtm(double lat, double lon, double alt,
+                   Point::Cart& utm_pos, std::string& utm_zone);
 } // namespace NavConversions
 
 #endif // NAV_CONVERSIONS_HPP

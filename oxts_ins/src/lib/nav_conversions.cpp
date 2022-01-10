@@ -223,3 +223,15 @@ Point::Cart NavConversions::geodeticToEnu(double lat, double lon, double alt,
 
   return p_enu;
 }
+
+void NavConversions::geodeticToUtm(double lat, double lon, double alt,
+                                   Point::Cart& utm_pos, std::string& utm_zone) {
+
+  double utm_x;
+  double utm_y;
+  gps_tools::LLtoUTM(lat, lon, utm_y, utm_x, utm_zone);
+  utm_pos.x(utm_x);
+  utm_pos.y(utm_y);
+  utm_pos.z(alt);
+}
+

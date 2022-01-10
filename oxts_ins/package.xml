@@ -17,6 +17,7 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>tf2_kdl</depend>
+  <depend>gps_tools</depend>
   <depend>oxts_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>

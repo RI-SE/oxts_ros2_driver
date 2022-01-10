@@ -154,6 +154,8 @@ private:
   void velocity(std_msgs::msg::Header header);
   /** Callback function for Odometry message. Wraps message and publishes. */
   void odometry(std_msgs::msg::Header header);
+  /** Callback function for UTM Odometry message. Wraps message and publishes. */
+  void utm_odometry(std_msgs::msg::Header header);
   /** Callback function for Path message. Wraps message and publishes. */
   void path(std_msgs::msg::Header header);
   /** Callback function for PointStamped message. Wraps message and
@@ -184,6 +186,8 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocity_;
   /** Publisher for /nav_msgs/msg/Odometry */
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometry_;
+  /** Publisher for /nav_msgs/msg/Odometry containing UTM coordinates */
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubUtmOdometry_;
   /** Publisher for /nav_msgs/msg/Path */
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
   /** Publisher for /sensor_msgs/msg/TimeReference */
@@ -328,6 +332,8 @@ public:
       // Create publisher
       pubOdometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
           topic_prefix + "/" + odometry_topic, 10);
+      pubUtmOdometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
+          topic_prefix + "/" + odometry_topic + "_utm", 10);
     }
     if (pubPathInterval) {
       // Throw an error if ncom_rate / Path_rate is not an integer
