@@ -91,6 +91,7 @@ tf2::Quaternion getBodyRPY(const NComRxC *nrx);
  * NED
  */
 tf2::Quaternion getVehRPY(const NComRxC *nrx);
+tf2::Quaternion getIsoVehRPY(const NComRxC *nrx);
 /**
  * Get the LRF from the NCOM decoder
  */
@@ -176,6 +177,10 @@ sensor_msgs::msg::Imu imu(const NComRxC *nrx, std_msgs::msg::Header head);
  */
 geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
                                           std_msgs::msg::Header head);
+
+geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
+                                                  std_msgs::msg::Header head);
+
 /**
  * Wrap navigation data from NCom decoder to nav_msgs/msg/Odometry
  *
@@ -185,6 +190,15 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
  */
 nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
                                  const std_msgs::msg::Header &head, Lrf lrf);
+/**
+ * Wrap navigation data from NCom decoder to nav_msgs/msg/Odometry
+ *
+ * @param nrx Pointer to the decoded NCom data
+ * @param head Header to be added to the published message
+ * @returns
+ */
+nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
+                                        const std_msgs::msg::Header &head, Lrf lrf);                                 
 /**
  * Wrap navigation data from NCom decoder to nav_msgs/msg/Path
  *

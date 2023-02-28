@@ -24,6 +24,7 @@ oxts_ins:
     ### Publish Odometry message
     pub_odometry_rate       : 100
     odometry_topic          : "odometry"
+    odometry_vehicle_topic  : "odometry_vehicle"
     ### Publish Path message
     pub_path_rate           : 100
     path_topic              : "path"

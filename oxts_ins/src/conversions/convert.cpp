@@ -40,8 +40,10 @@ void OxtsIns::ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg) {
       this->nav_sat_fix(msg->header);
     if (this->pubVelocityInterval && (sec_idx % this->pubVelocityInterval == 0))
       this->velocity(msg->header);
-    if (this->pubOdometryInterval && (sec_idx % this->pubOdometryInterval == 0))
+    if (this->pubOdometryInterval && (sec_idx % this->pubOdometryInterval == 0)) {
       this->odometry(msg->header);
+      this->odometry_vehicle(msg->header);
+    }
     if (this->pubPathInterval && (sec_idx % this->pubPathInterval == 0))
       this->path(msg->header);
     if (this->pubTimeReferenceInterval &&
@@ -177,6 +179,22 @@ void OxtsIns::odometry(std_msgs::msg::Header header) {
       this->past_poses.push_back(new_pose_stamped);
     }
     pubOdometry_->publish(msg);
+  }
+}
+
+void OxtsIns::odometry_vehicle(std_msgs::msg::Header header) {
+  header.frame_id = this->pub_odometry_frame_id;
+  // Set the LRF if - we haven't set it before (unless using NCOM LRF)
+  this->getLrf();
+  if (this->lrf_valid) {
+    auto msg = RosNComWrapper::odometry_vehicle(this->nrx, header, this->lrf);
+    // if (this->pubPathInterval) {
+    //   auto new_pose_stamped = geometry_msgs::msg::PoseStamped();
+    //   new_pose_stamped.header = msg.header;
+    //   new_pose_stamped.pose = msg.pose.pose;
+    //   this->past_poses.push_back(new_pose_stamped);
+    // }
+    pubOdometryVehicle_->publish(msg);
   }
 }
 
