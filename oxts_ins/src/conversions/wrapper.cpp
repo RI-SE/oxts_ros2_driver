@@ -318,7 +318,7 @@ geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
   auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
   auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
   
-  std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
+  // std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
   msg.twist.linear.x = veh_v.getX();
   msg.twist.linear.y = veh_v.getY();
   msg.twist.linear.z = veh_v.getZ();
