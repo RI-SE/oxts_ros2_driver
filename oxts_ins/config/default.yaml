@@ -55,3 +55,11 @@ oxts_ins:
     #### 1 - Set automatically from first NCom packet
     #### 2 - Set automatically from first position of NCom packet aligned to ENU
     lrf_source              : 2
+
+    ### Mounting of unit in relation to vehicle
+    ### Rotations in RPY order how to turn the unit to align with the vehicle
+    ### This compensates for small differences in mounting of the lidar and vehicle.
+    ### Assuming the lidar and unit is more aligned!
+    unit2vehicle_roll       : 0.0 # [Deg]
+    unit2vehicle_pitch      : -90.0 # [Deg]
+    unit2vehicle_yaw        : 180.0 # [Deg]

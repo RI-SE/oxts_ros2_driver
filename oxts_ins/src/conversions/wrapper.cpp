@@ -57,18 +57,11 @@ tf2::Quaternion getVehRPY(const NComRxC *nrx) {
 }
 
 tf2::Quaternion getIsoVehRPY(const NComRxC *nrx) {
-  // auto rpyVehNED = tf2::Quaternion(); // Orientation of the vehicle (NED frame)
   auto rpyVehIso = tf2::Quaternion(); // Orientation of the vehicle (ENU frame)
-  // auto ned2enu = tf2::Quaternion();   // NED to ENU rotation
 
   rpyVehIso.setRPY(NAV_CONST::DEG2RADS * nrx->mIsoRoll,
                    NAV_CONST::DEG2RADS * nrx->mIsoPitch,
                    NAV_CONST::DEG2RADS * nrx->mIsoYaw);
-  // std::cout << "Iso Yaw: " << nrx->mIsoYaw << std::endl;                   
-  // NED to ENU rotation
-  // ned2enu.setRPY(180.0 * NAV_CONST::DEG2RADS, 0, 90.0 * NAV_CONST::DEG2RADS);
-  // transform from NED to ENU
-  // rpyVehENU = ned2enu * rpyVehNED;
   return rpyVehIso;
 }
 
@@ -425,11 +418,10 @@ nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
 }
 
 nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
-                                         const std_msgs::msg::Header &head, Lrf lrf) {
+                                         const std_msgs::msg::Header &head, Lrf lrf, const tf2::Quaternion& unit2vehicle) {
   auto msg = nav_msgs::msg::Odometry();
   msg.header = head;
-  // msg.child_frame_id = "oxts_link";
-  msg.child_frame_id = "odom_imu";
+  msg.child_frame_id = "odom_imu"; // odom_imu to match LIO-SAM imuPreintegration
   
   // pose with covariance ======================================================
 
@@ -444,21 +436,59 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
   msg.pose.pose.position.y = p_lrf.y();
   msg.pose.pose.position.z = p_lrf.z();
 
-  // Orientation must be taken from NCom (NED - pseudo polar) and rotated into
-  // ENU - tangent
-  // auto rpyVehENU = RosNComWrapper::getVehRPY(nrx);
-  auto rpyVehENU = RosNComWrapper::getIsoVehRPY(nrx);
-  auto rpyVehLRF = tf2::Quaternion();
-  auto enu2lrf = tf2::Quaternion();
+  // Orientation of body (oxts unit) in ENU
+  auto rpyBodENU = RosNComWrapper::getBodyRPY(nrx);
   // ENU to LRF rotation
+  auto enu2lrf = tf2::Quaternion();
   enu2lrf.setRPY(0, 0, lrf.heading());
-  // transform from ENU to LRF
-  rpyVehLRF = enu2lrf * rpyVehENU;
 
-  msg.pose.pose.orientation.x = rpyVehLRF.x();
-  msg.pose.pose.orientation.y = rpyVehLRF.y();
-  msg.pose.pose.orientation.z = rpyVehLRF.z();
-  msg.pose.pose.orientation.w = rpyVehLRF.w();
+  // transform from ENU to LRF
+  auto rpyBodLRF = tf2::Quaternion();
+  // Body in LRF
+  rpyBodLRF = enu2lrf * rpyBodENU;
+
+  // Placement in rig/car
+  auto result = rpyBodLRF*unit2vehicle;
+
+  msg.pose.pose.orientation.x = result.x();
+  msg.pose.pose.orientation.y = result.y();
+  msg.pose.pose.orientation.z = result.z();
+  msg.pose.pose.orientation.w = result.w();
+
+  // Do a sanity check
+  double roll, pitch, yaw; 
+  tf2::Matrix3x3 rpyUnit(result);  
+  rpyUnit.getRPY(roll, pitch, yaw); // Radians
+  double rollDiff, pitchDiff, yawDiff;
+  rollDiff = roll*180.0*M_1_PI - nrx->mIsoRoll; // Degrees
+  pitchDiff = pitch*180.0*M_1_PI - nrx->mIsoPitch;
+  yawDiff = yaw*180.0*M_1_PI - nrx->mIsoYaw;
+
+
+  if(std::fabs(rollDiff) > 5 || std::fabs(pitchDiff) > 5 || std::fabs(yawDiff) > 5) {
+    std::cout << "WARNING: Unit and ISO RPY differ by more than 5 degrees. Double check your settings!" << std::endl;
+
+    std::cout << "rollDiff: " << rollDiff << std::endl;
+    std::cout << "pitchDiff: " << pitchDiff << std::endl;
+    std::cout << "yawDiff: " << yawDiff << std::endl;
+
+    std::cout << "Unit roll: " << roll*180*M_1_PI << std::endl;
+    std::cout << "Unit pitch: " << pitch*180*M_1_PI << std::endl;
+    std::cout << "Unit yaw: " << yaw*180*M_1_PI << std::endl;
+    // Should be very close
+    std::cout << "ISO roll: " << nrx->mIsoRoll << std::endl;
+    std::cout << "ISO pitch: " << nrx->mIsoPitch << std::endl;
+    std::cout << "ISO yaw: " << nrx->mIsoYaw << std::endl;
+
+    // Revert to vehicle frame
+    auto rpyVehENU = RosNComWrapper::getIsoVehRPY(nrx);
+    auto rpyVehLRF = tf2::Quaternion();
+    rpyVehLRF = enu2lrf * rpyVehENU;
+    msg.pose.pose.orientation.x = rpyVehLRF.x();
+    msg.pose.pose.orientation.y = rpyVehLRF.y();
+    msg.pose.pose.orientation.z = rpyVehLRF.z();
+    msg.pose.pose.orientation.w = rpyVehLRF.w();
+ }
 
   // Covariance from NCom is in the NED local coordinate frame. This must be
   // rotated into the LRF

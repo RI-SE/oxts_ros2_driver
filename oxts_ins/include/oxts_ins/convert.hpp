@@ -39,6 +39,7 @@
 #include <geometry_msgs/msg/transform_stamped.h>
 #include <oxts_msgs/msg/ncom.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 // Boost includes
 #include <boost/asio.hpp>
 
@@ -96,6 +97,7 @@ private:
   uint8_t pub_path_rate;
   /*! Historical data for Path message. */
   std::vector<geometry_msgs::msg::PoseStamped> past_poses;
+  std::vector<geometry_msgs::msg::PoseStamped> past_vehicle_poses;
   /*! Publishing rate for TimeReference message.*/
   uint8_t pub_time_reference_rate;
   /*! Publishing rate for PointStamped message. */
@@ -136,6 +138,15 @@ private:
   std::string lever_arm_topic;
   std::string imu_bias_topic;
   std::string imu_topic;
+
+  // Approximate mounting of unit in relation to vehicle
+  // Should be in 90 degrees angles from vehicle
+  double unit2vehicle_roll = 0.0;
+  double unit2vehicle_pitch = 0.0;
+  double unit2vehicle_yaw = 0.0;
+  // In RPY order
+  tf2::Quaternion unit2vehicle;
+
   // ...
 
   void ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg);
@@ -158,6 +169,7 @@ private:
   void odometry_vehicle(std_msgs::msg::Header header);
   /** Callback function for Path message. Wraps message and publishes. */
   void path(std_msgs::msg::Header header);
+  void vehicle_path(std_msgs::msg::Header header);
   /** Callback function for PointStamped message. Wraps message and
    *  publishes.*/
   void ecef_pos(std_msgs::msg::Header header);
@@ -189,6 +201,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometryVehicle_;
   /** Publisher for /nav_msgs/msg/Path */
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubVehiclePath_;
   /** Publisher for /sensor_msgs/msg/TimeReference */
   rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr
       pubTimeReference_;
@@ -250,6 +263,14 @@ public:
     lever_arm_topic = this->declare_parameter("lever_arm_topic", "lever_arm");
     imu_bias_topic = this->declare_parameter("imu_bias_topic", "imu_bias");
     imu_topic = this->declare_parameter("imu_topic", "imu");
+
+    unit2vehicle_roll = this->declare_parameter("unit2vehicle_roll", 0.0);
+    unit2vehicle_pitch = this->declare_parameter("unit2vehicle_pitch", 0.0);
+    unit2vehicle_yaw = this->declare_parameter("unit2vehicle_yaw", 0.0);
+    unit2vehicle.setRPY(
+      NAV_CONST::DEG2RADS * unit2vehicle_roll, 
+      NAV_CONST::DEG2RADS * unit2vehicle_pitch, 
+      NAV_CONST::DEG2RADS * unit2vehicle_yaw);
 
     /** @todo Improve error handling */
     if (ncom_rate == 0) {
@@ -346,6 +367,9 @@ public:
       // Create publisher
       pubPath_ = this->create_publisher<nav_msgs::msg::Path>(
           topic_prefix + "/" + path_topic, 10);
+
+      pubVehiclePath_ = this->create_publisher<nav_msgs::msg::Path>(
+          topic_prefix + "/" + path_topic + "_vehicle", 10);
     }
     if (pubTimeReferenceInterval) {
       // Throw an error if ncom_rate / TimeReference_rate is not an integer
