@@ -61,5 +61,7 @@ oxts_ins:
     ### This compensates for small differences in mounting of the lidar and vehicle.
     ### Assuming the lidar and unit is more aligned!
     unit2vehicle_roll       : 0.0 # [Deg]
-    unit2vehicle_pitch      : -90.0 # [Deg]
-    unit2vehicle_yaw        : 180.0 # [Deg]
+    unit2vehicle_pitch      : 0.0 # [Deg]
+    unit2vehicle_yaw        : 0.0 # [Deg]
+
+    

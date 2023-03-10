@@ -7,7 +7,7 @@ oxts_driver:
     ## Unit Port (3000 unless intentionally configured otherwise on the INS)
     unit_port: 3000
     ## Path of NCOM to replay (optional, must be absolute path)
-    ncom: /home/oscar/Downloads/220324_112451.ncom 
+    # ncom: /home/oscar/Downloads/220324_112451.ncom 
     ## Topic to publish NCOM messages to
     ncom_topic: "ncom"
     topic_prefix: "ins"
@@ -15,7 +15,7 @@ oxts_driver:
 #===============================================================================
     ## Rate is in Hz. 0 Hz => Message will not be published
     ### Configure sample rate of NCom (do not exceed output rate of ncom)
-    ncom_rate               : 200
+    ncom_rate               : 100
 
 #===============================================================================
     ## Timing - how to timestamp messages published by the ROS driver
