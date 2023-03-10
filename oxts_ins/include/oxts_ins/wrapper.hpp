@@ -179,7 +179,7 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
                                           std_msgs::msg::Header head);
 
 geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
-                                                  std_msgs::msg::Header head);
+                                                  std_msgs::msg::Header head, const tf2::Quaternion& q);
 
 /**
  * Wrap navigation data from NCom decoder to nav_msgs/msg/Odometry

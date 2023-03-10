@@ -304,23 +304,58 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
 }
 
 geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
-                                                  std_msgs::msg::Header head) {
+                                          std_msgs::msg::Header head, const tf2::Quaternion& unit2vehicle) {
   auto msg = geometry_msgs::msg::TwistStamped();
   msg.header = std::move(head);
 
+  // Construct vehicle-imu frame transformation --------------------------------
+  auto q_vat = getVat(nrx);
+  auto r_vat = tf2::Matrix3x3(q_vat);
   auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
-  auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
+  auto veh_w = tf2::Vector3(nrx->mWx, nrx->mWy, nrx->mWz);
+  auto imu_w = tf2::Vector3();
+  auto imu_v = tf2::Vector3();
+  auto q_iso_oxts = tf2::Quaternion();
+
+  q_iso_oxts.setRPY(180.0 * NAV_CONST::DEG2RADS, 0.0, 0.0);
+  auto r_iso_oxts = tf2::Matrix3x3(q_iso_oxts);
+
+  imu_v = r_vat * r_iso_oxts * veh_v;
+  imu_w = r_vat * veh_w;
   
-  // std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
-  msg.twist.linear.x = veh_v.getX();
-  msg.twist.linear.y = veh_v.getY();
-  msg.twist.linear.z = veh_v.getZ();
-  msg.twist.angular.x = veh_w.getX(); 
-  msg.twist.angular.y = veh_w.getY();
-  msg.twist.angular.z = -veh_w.getZ(); //Wrong sign from NCOM??. TODO: check above
+  // Placement in rig/car
+  auto r_unit2vehicle = tf2::Matrix3x3(unit2vehicle);
+  imu_v = imu_v * r_unit2vehicle;
+  imu_w = imu_w * r_unit2vehicle;
+
+  msg.twist.linear.x = imu_v.getX();
+  msg.twist.linear.y = imu_v.getY();
+  msg.twist.linear.z = imu_v.getZ();
+  msg.twist.angular.x = imu_w.getX();
+  msg.twist.angular.y = imu_w.getY();
+  msg.twist.angular.z = imu_w.getZ();
 
   return msg;
 }
+
+// geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
+//                                                   std_msgs::msg::Header head) {
+//   auto msg = geometry_msgs::msg::TwistStamped();
+//   msg.header = std::move(head);
+
+//   auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
+//   auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
+  
+//   // std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
+//   msg.twist.linear.x = veh_v.getX();
+//   msg.twist.linear.y = veh_v.getY();
+//   msg.twist.linear.z = veh_v.getZ();
+//   msg.twist.angular.x = veh_w.getX(); 
+//   msg.twist.angular.y = veh_w.getY();
+//   msg.twist.angular.z = -veh_w.getZ(); //Wrong sign from NCOM??. TODO: check above
+
+//   return msg;
+// }
 
 tf2::Matrix3x3 getRotEnuToEcef(double lat0, double lon0) {
   double lambda = (lon0)*NAV_CONST::DEG2RADS;
@@ -519,7 +554,7 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
 
   // twist =====================================================================
 
-  auto twist_stamped = RosNComWrapper::velocity_vehicle(nrx, head);
+  auto twist_stamped = RosNComWrapper::velocity_vehicle(nrx, head, unit2vehicle);
   msg.twist.twist = twist_stamped.twist;
 
   /** \todo Twist covariance */
