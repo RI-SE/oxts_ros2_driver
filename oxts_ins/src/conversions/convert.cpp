@@ -189,7 +189,7 @@ void OxtsIns::odometry_vehicle(std_msgs::msg::Header header) {
   // Set the LRF if - we haven't set it before (unless using NCOM LRF)
   this->getLrf();
   if (this->lrf_valid) {
-    auto msg = RosNComWrapper::odometry_vehicle(this->nrx, header, this->lrf, this->unit2vehicle);
+    auto msg = RosNComWrapper::odometry_vehicle(this->nrx, header, this->lrf, this->device2vehicle, this->device2vehicle_tolerance);
     if (this->pubPathInterval) {
       auto new_pose_stamped = geometry_msgs::msg::PoseStamped();
       new_pose_stamped.header = msg.header;

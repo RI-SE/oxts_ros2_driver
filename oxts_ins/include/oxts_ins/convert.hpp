@@ -141,11 +141,12 @@ private:
 
   // Approximate mounting of unit in relation to vehicle
   // Should be in 90 degrees angles from vehicle
-  double unit2vehicle_roll = 0.0;
-  double unit2vehicle_pitch = 0.0;
-  double unit2vehicle_yaw = 0.0;
+  double device2vehicle_roll = 0.0;
+  double device2vehicle_pitch = 0.0;
+  double device2vehicle_yaw = 0.0;
+  double device2vehicle_tolerance = 5.0;
   // In RPY order
-  tf2::Quaternion unit2vehicle;
+  tf2::Quaternion device2vehicle;
 
   // ...
 
@@ -264,13 +265,15 @@ public:
     imu_bias_topic = this->declare_parameter("imu_bias_topic", "imu_bias");
     imu_topic = this->declare_parameter("imu_topic", "imu");
 
-    unit2vehicle_roll = this->declare_parameter("unit2vehicle_roll", 0.0);
-    unit2vehicle_pitch = this->declare_parameter("unit2vehicle_pitch", 0.0);
-    unit2vehicle_yaw = this->declare_parameter("unit2vehicle_yaw", 0.0);
-    unit2vehicle.setRPY(
-      NAV_CONST::DEG2RADS * unit2vehicle_roll, 
-      NAV_CONST::DEG2RADS * unit2vehicle_pitch, 
-      NAV_CONST::DEG2RADS * unit2vehicle_yaw);
+    device2vehicle_roll = this->declare_parameter("device2vehicle_roll", 0.0);
+    device2vehicle_pitch = this->declare_parameter("device2vehicle_pitch", 0.0);
+    device2vehicle_yaw = this->declare_parameter("device2vehicle_yaw", 0.0);
+    device2vehicle.setRPY(
+      NAV_CONST::DEG2RADS * device2vehicle_roll, 
+      NAV_CONST::DEG2RADS * device2vehicle_pitch, 
+      NAV_CONST::DEG2RADS * device2vehicle_yaw);
+    device2vehicle_tolerance = this->declare_parameter("device2vehicle_tolerance", 5.0);
+
 
     /** @todo Improve error handling */
     if (ncom_rate == 0) {

@@ -45,7 +45,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <oxts_ins/tf2_geometry_msgs.hpp>
-#include "tf2_kdl/tf2_kdl.h"
+#include "tf2_kdl/tf2_kdl.hpp"
 
 // OxTS includes
 #include "oxts_ins/NComRxC.h"
@@ -198,7 +198,10 @@ nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
  * @returns
  */
 nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
-                                        const std_msgs::msg::Header &head, Lrf lrf, const tf2::Quaternion& q);                                 
+                                        const std_msgs::msg::Header &head, 
+                                        Lrf lrf, 
+                                        const tf2::Quaternion& q,
+                                        const double device2vehicle_tolerance);                                 
 /**
  * Wrap navigation data from NCom decoder to nav_msgs/msg/Path
  *

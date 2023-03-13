@@ -304,7 +304,7 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
 }
 
 geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
-                                          std_msgs::msg::Header head, const tf2::Quaternion& unit2vehicle) {
+                                          std_msgs::msg::Header head, const tf2::Quaternion& device2vehicle) {
   auto msg = geometry_msgs::msg::TwistStamped();
   msg.header = std::move(head);
 
@@ -324,9 +324,9 @@ geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
   imu_w = r_vat * veh_w;
   
   // Placement in rig/car
-  auto r_unit2vehicle = tf2::Matrix3x3(unit2vehicle);
-  imu_v = imu_v * r_unit2vehicle;
-  imu_w = imu_w * r_unit2vehicle;
+  auto r_device2vehicle = tf2::Matrix3x3(device2vehicle);
+  imu_v = imu_v * r_device2vehicle;
+  imu_w = imu_w * r_device2vehicle;
 
   msg.twist.linear.x = imu_v.getX();
   msg.twist.linear.y = imu_v.getY();
@@ -453,7 +453,10 @@ nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
 }
 
 nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
-                                         const std_msgs::msg::Header &head, Lrf lrf, const tf2::Quaternion& unit2vehicle) {
+                                         const std_msgs::msg::Header &head, 
+                                         Lrf lrf, 
+                                         const tf2::Quaternion& device2vehicle,
+                                         const double device2vehicle_tolerance) {
   auto msg = nav_msgs::msg::Odometry();
   msg.header = head;
   msg.child_frame_id = "odom_imu"; // odom_imu to match LIO-SAM imuPreintegration
@@ -483,7 +486,7 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
   rpyBodLRF = enu2lrf * rpyBodENU;
 
   // Placement in rig/car
-  auto result = rpyBodLRF*unit2vehicle;
+  auto result = rpyBodLRF*device2vehicle;
 
   msg.pose.pose.orientation.x = result.x();
   msg.pose.pose.orientation.y = result.y();
@@ -500,8 +503,12 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
   yawDiff = yaw*180.0*M_1_PI - nrx->mIsoYaw;
 
 
-  if(std::fabs(rollDiff) > 5 || std::fabs(pitchDiff) > 5 || std::fabs(yawDiff) > 5) {
-    std::cout << "WARNING: Unit and ISO RPY differ by more than 5 degrees. Double check your settings!" << std::endl;
+  if(std::fabs(rollDiff) > device2vehicle_tolerance 
+      || std::fabs(pitchDiff) > device2vehicle_tolerance 
+      || std::fabs(yawDiff) > device2vehicle_tolerance) {
+
+    std::cout << "\nWARNING: Device and ISO RPY differ by more than " 
+      << device2vehicle_tolerance << " degrees. Double check your settings!" << std::endl;
 
     std::cout << "rollDiff: " << rollDiff << std::endl;
     std::cout << "pitchDiff: " << pitchDiff << std::endl;
@@ -554,7 +561,7 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
 
   // twist =====================================================================
 
-  auto twist_stamped = RosNComWrapper::velocity_vehicle(nrx, head, unit2vehicle);
+  auto twist_stamped = RosNComWrapper::velocity_vehicle(nrx, head, device2vehicle);
   msg.twist.twist = twist_stamped.twist;
 
   /** \todo Twist covariance */
