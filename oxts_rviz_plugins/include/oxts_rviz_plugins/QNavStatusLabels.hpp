@@ -5,12 +5,6 @@
 
 #include "oxts_rviz_plugins/nav_const.hpp"
 
-struct DoubleLimit {
-	double green = 0.05;
-	double yellow = 0.1;
-	double red = __DBL_MAX__;
-};
-
 class QNavStatusLabel : public QLabel {
 	Q_OBJECT
    public:
@@ -73,6 +67,12 @@ class QDoubleLabel : public QLabel {
 	Q_OBJECT
 
 	enum class Status { OK, WARNING, ERROR };
+
+	struct DoubleLimit {
+		double green = 0.05;
+		double yellow = 0.1;
+		double red = __DBL_MAX__;
+	};
 
    public:
 	explicit QDoubleLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
