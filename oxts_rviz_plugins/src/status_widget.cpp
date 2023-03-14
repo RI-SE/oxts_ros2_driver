@@ -11,7 +11,7 @@ StatusWidget::StatusWidget(QWidget* parent) : QWidget(parent) {
 	RCLCPP_INFO(_node->get_logger(), "Subscribing to /ins/ncom");
 
     NavLabel = new QLabel(this);
-    NavStatus = new QDoubleLabel(this);
+    NavStatus = new QNavStatusLabel(this);
 	EastAccLabel = new QLabel(this);
     EastAccStatus = new QDoubleLabel(this);
 	NorthAccLabel = new QLabel(this);
@@ -61,13 +61,11 @@ StatusWidget::~StatusWidget() {
 
 void StatusWidget::ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg) {
 	if (NComNewChars(this->nrx, msg->raw_packet.data(), NCOM_PACKET_LENGTH) == COM_NEW_UPDATE) {
-        uint8_t navMode = this->nrx->mInsNavMode;
-
         EastAccStatus->setValue(this->nrx->mEastAcc);
         NorthAccStatus->setValue(this->nrx->mNorthAcc);
         UpAccStatus->setValue(this->nrx->mAltAcc);
         
-        NavStatus->setText(QString::number(navMode));
+        NavStatus->setValue(this->nrx->mInsNavMode);
 	}
 }
 
