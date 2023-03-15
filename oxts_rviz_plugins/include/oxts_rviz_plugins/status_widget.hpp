@@ -35,30 +35,29 @@ class StatusWidget : public QWidget {
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
 
-    void initLayout();
-    
-    QNavStatusLabel* NavStatus;
+	void initLayout();
+
+	QNavStatusLabel* NavStatus;
 
 	QTextLabel* NavLabel;
 	QTextLabel* EastAccLabel;
 	QTextLabel* NorthAccLabel;
 	QTextLabel* UpAccLabel;
-    QTextLabel* RollAccLabel;
-    QTextLabel* PitchAccLabel;
-    QTextLabel* YawAccLabel;
-    QTextLabel* SatLabelPrimary;
-    QTextLabel* SatLabelSecondary;
+	QTextLabel* RollAccLabel;
+	QTextLabel* PitchAccLabel;
+	QTextLabel* YawAccLabel;
+	QTextLabel* SatLabelPrimary;
+	QTextLabel* SatLabelSecondary;
 
-    QDoubleLabel* NorthAccStatus;
-    QDoubleLabel* EastAccStatus;
+	QDoubleLabel* NorthAccStatus;
+	QDoubleLabel* EastAccStatus;
 	QDoubleLabel* UpAccStatus;
-    QDoubleLabel* RollAccStatus;
-    QDoubleLabel* PitchAccStatus;
-    QDoubleLabel* YawAccStatus;
+	QDoubleLabel* RollAccStatus;
+	QDoubleLabel* PitchAccStatus;
+	QDoubleLabel* YawAccStatus;
 
-
-    QSatStatusLabel* SatStatusPrimary;
-    QSatStatusLabel* SatStatusSecondary;
+	QSatStatusLabel* SatStatusPrimary;
+	QSatStatusLabel* SatStatusSecondary;
 
 	NComRxC* nrx;
 };
