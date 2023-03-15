@@ -5,12 +5,93 @@
 
 #include "oxts_rviz_plugins/nav_const.hpp"
 
+enum class Status { OK, WARNING, ERROR };
+
+struct GpsLimits {
+	int green = 9;
+	int yellow = 5;
+	int red = 0;
+};
+
+struct DoubleLimit {
+	double green = 0.05;
+	double yellow = 0.1;
+	double red = __DBL_MAX__;
+};
+
+class QTextLabel : public QLabel {
+	Q_OBJECT
+   public:
+	explicit QTextLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
+		QLabel(parent, f);
+		this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+		this->setWordWrap(true);
+	}
+
+	explicit QTextLabel(QWidget* parent, QString text, Qt::WindowFlags f = Qt::WindowFlags()) {
+		QLabel(parent, f);
+		this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+		this->setWordWrap(true);
+		this->setText(text);
+	}
+
+	virtual ~QTextLabel(){};
+};
+
+class QSatStatusLabel : public QLabel {
+	Q_OBJECT
+
+   public:
+	explicit QSatStatusLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
+		QLabel(parent, f);
+		this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+		this->setWordWrap(true);
+		this->setText("Awaiting data");
+		this->setStyleSheet("QLabel { background-color : red; color : black; }");
+	}
+	virtual ~QSatStatusLabel(){};
+
+	void setValue(const int nSats) {
+		this->setText(QString::number(nSats));
+		this->updateStyle(nSats);
+	}
+
+   private:
+	void updateStyle(const int text) {
+		auto newStatus = getStatus(text);
+		if (status == newStatus) {
+			return;
+		}
+
+		status = newStatus;
+		if (status == Status::OK) {
+			this->setStyleSheet("background-color : green;");
+		} else if (status == Status::WARNING) {
+			this->setStyleSheet("background-color : yellow;");
+		} else if (status == Status::ERROR) {
+			this->setStyleSheet("background-color : red;");
+		}
+	}
+
+	Status getStatus(const int d) {
+		if (d > limit.green) {
+			return Status::OK;
+		} else if (d >= limit.yellow && d < limit.green) {
+			return Status::WARNING;
+		} else {
+			return Status::ERROR;
+		}
+	}
+
+	Status status = Status::ERROR;
+	GpsLimits limit;
+};
+
 class QNavStatusLabel : public QLabel {
 	Q_OBJECT
    public:
 	explicit QNavStatusLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
 		QLabel(parent, f);
-
 		this->setText("Awaiting data");
 		this->setStyleSheet("QLabel { background-color : red; color : black; }");
 	}
@@ -66,18 +147,9 @@ class QNavStatusLabel : public QLabel {
 class QDoubleLabel : public QLabel {
 	Q_OBJECT
 
-	enum class Status { OK, WARNING, ERROR };
-
-	struct DoubleLimit {
-		double green = 0.05;
-		double yellow = 0.1;
-		double red = __DBL_MAX__;
-	};
-
    public:
 	explicit QDoubleLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
 		QLabel(parent, f);
-
 		this->setText("Awaiting data");
 		this->setStyleSheet("QLabel { background-color : red; color : black; }");
 	}
@@ -88,8 +160,14 @@ class QDoubleLabel : public QLabel {
 		updateStyle(d_text);
 	}
 
+    void setLimits(const double green, const double yellow, const double red = __DBL_MAX__) {
+        limit.green = green;
+        limit.yellow = yellow;
+        limit.red = red;
+    }
+
    private:
-	void updateStyle(double d_text) {
+	void updateStyle(const double d_text) {
 		auto newStatus = getStatus(d_text);
 		if (status == newStatus) {
 			return;
@@ -118,3 +196,4 @@ class QDoubleLabel : public QLabel {
 	Status status = Status::ERROR;
 	DoubleLimit limit;
 };
+

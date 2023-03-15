@@ -14,7 +14,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include "oxts_msgs/msg/ncom.hpp"
 #include "oxts_rviz_plugins/NComRxC.h"
-#include "oxts_rviz_plugins/QNavStatusLabels.hpp"
+#include "oxts_rviz_plugins/QNavLabels.hpp"
 #endif
 
 namespace oxts_rviz_plugins {
@@ -35,14 +35,30 @@ class StatusWidget : public QWidget {
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
 
-	QLabel* NavLabel;
-	QNavStatusLabel* NavStatus;
-	QLabel* EastAccLabel;
-	QDoubleLabel* EastAccStatus;
-	QLabel* NorthAccLabel;
-	QDoubleLabel* NorthAccStatus;
-	QLabel* UpAccLabel;
+    void initLayout();
+    
+    QNavStatusLabel* NavStatus;
+
+	QTextLabel* NavLabel;
+	QTextLabel* EastAccLabel;
+	QTextLabel* NorthAccLabel;
+	QTextLabel* UpAccLabel;
+    QTextLabel* RollAccLabel;
+    QTextLabel* PitchAccLabel;
+    QTextLabel* YawAccLabel;
+    QTextLabel* SatLabelPrimary;
+    QTextLabel* SatLabelSecondary;
+
+    QDoubleLabel* NorthAccStatus;
+    QDoubleLabel* EastAccStatus;
 	QDoubleLabel* UpAccStatus;
+    QDoubleLabel* RollAccStatus;
+    QDoubleLabel* PitchAccStatus;
+    QDoubleLabel* YawAccStatus;
+
+
+    QSatStatusLabel* SatStatusPrimary;
+    QSatStatusLabel* SatStatusSecondary;
 
 	NComRxC* nrx;
 };

@@ -43,7 +43,7 @@ set(oxts_rviz_plugins_headers_to_moc
     include/oxts_rviz_plugins/status_widget.hpp
     include/oxts_rviz_plugins/NComRxC.h
     include/oxts_rviz_plugins/nav_const.hpp
-    include/oxts_rviz_plugins/QNavStatusLabels.hpp
+    include/oxts_rviz_plugins/QNavLabels.hpp
 )
 
 foreach(header "${oxts_rviz_plugins_headers_to_moc}")
