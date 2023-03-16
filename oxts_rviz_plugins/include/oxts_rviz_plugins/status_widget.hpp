@@ -1,10 +1,8 @@
 #pragma once
 
 #include <QGridLayout>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QString>
-#include <QVBoxLayout>
 #include <QWidget>
 #include <QLineEdit>
 
@@ -30,15 +28,11 @@ class StatusWidget : public QWidget {
 
    public Q_SLOTS:
     void updateTopic();
-    
-   private Q_SLOTS:
-
-   protected:
-	void ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg);
 
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
     std::string subTopic = "/ins/ncom";
+    void ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg);
 
 	void initLayout();
 
@@ -66,6 +60,8 @@ class StatusWidget : public QWidget {
 
 	QSatStatusLabel* SatStatusPrimary;
 	QSatStatusLabel* SatStatusSecondary;
+
+    std::vector<QInitializedLabel*> statusLabels;
 
 	NComRxC* nrx;
 };

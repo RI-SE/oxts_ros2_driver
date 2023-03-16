@@ -11,37 +11,61 @@ StatusWidget::StatusWidget(QWidget* parent) : QWidget(parent) {
 	RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
 
 	initLayout();
-    connect(TopicEditor, SIGNAL(editingFinished()), this, SLOT(updateTopic()));
+    //* Connects the topic editor to the updateTopic function
+	connect(TopicEditor, SIGNAL(editingFinished()), this, SLOT(updateTopic()));
 
+    //* Create NCOM object
 	nrx = NComCreateNComRxC();
+
+    //* Add all status labels to container to easily iterate over them
+	statusLabels.push_back(NorthAccStatus);
+	statusLabels.push_back(EastAccStatus);
+	statusLabels.push_back(UpAccStatus);
+	statusLabels.push_back(RollAccStatus);
+	statusLabels.push_back(PitchAccStatus);
+	statusLabels.push_back(YawAccStatus);
+	statusLabels.push_back(SatStatusPrimary);
+	statusLabels.push_back(SatStatusSecondary);
+	statusLabels.push_back(NavStatus);
 }
 
 StatusWidget::~StatusWidget() {
-    NComDestroyNComRxC(nrx);
-    nrx = NULL;
+	NComDestroyNComRxC(nrx);
+	nrx = NULL;
 }
 
-// Updates subscription topic from user input
+/**
+ * @brief Updates subscription topic from user input
+ */
 void StatusWidget::updateTopic() {
-    auto newTopic = TopicEditor->text().toStdString();
-    if(newTopic == subTopic) 
-        return;
-    if(newTopic == "") {
-        RCLCPP_WARN(_node->get_logger(), "Can't set subscription to empty topic!");    
-        return;
-    }
+	auto newTopic = TopicEditor->text().toStdString();
+	if (newTopic == subTopic)
+		return;
 
-    subTopic = newTopic;
-    subNcom_ = _node->create_subscription<oxts_msgs::msg::Ncom>(
-        subTopic, 1, std::bind(&StatusWidget::ncomCallback, this, std::placeholders::_1));
-    RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
+	try {
+		subNcom_ = _node->create_subscription<oxts_msgs::msg::Ncom>(
+			newTopic, 1, std::bind(&StatusWidget::ncomCallback, this, std::placeholders::_1));
+        subTopic = newTopic;
+	    RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
+
+        //* Reset styles until valid data is received
+        for(auto label : statusLabels) {
+            label->initStyle();
+        }
+	} catch (const rclcpp::exceptions::InvalidTopicNameError& e) {
+		RCLCPP_WARN(_node->get_logger(), "%s", e.what());
+	}
 }
 
+/**
+ * @brief Initializes all QLabel objects and adds them to a layout
+*/
 void StatusWidget::initLayout() {
-    TopicEditor = new QLineEdit(this);
-    TopicEditor->setPlaceholderText("/ins/ncom");
+	TopicEditor = new QLineEdit(this);
+	TopicEditor->setPlaceholderText("/ins/ncom");
+	TopicEditor->setToolTip("Enter topic to subscribe to then press enter");
 
-    TopicLabel = new QTextLabel(this, "NCOM Topic:");
+	TopicLabel = new QTextLabel(this, "NCOM Topic:");
 	NavLabel = new QTextLabel(this, "Navigation system mode:");
 	EastAccLabel = new QTextLabel(this, "East accuracy:");
 	NorthAccLabel = new QTextLabel(this, "North accuracy:");
@@ -70,8 +94,8 @@ void StatusWidget::initLayout() {
 
 	QGridLayout* grid = new QGridLayout(this);
 
-    grid->addWidget(TopicLabel, 0, 0);
-    grid->addWidget(TopicEditor, 0, 1);
+	grid->addWidget(TopicLabel, 0, 0);
+	grid->addWidget(TopicEditor, 0, 1);
 	grid->addWidget(NavLabel, 1, 0);
 	grid->addWidget(NavStatus, 1, 1);
 	grid->addWidget(EastAccLabel, 2, 0);
@@ -114,6 +138,6 @@ void StatusWidget::ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg) {
 			SatStatusPrimary->setValue(this->nrx->mGpsPrimary->mNumSats);
 		if (this->nrx->mGpsSecondary->mIsNumSatsValid)
 			SatStatusSecondary->setValue(this->nrx->mGpsSecondary->mNumSats);
-	}
+    }
 }
 }  // namespace oxts_rviz_plugins
