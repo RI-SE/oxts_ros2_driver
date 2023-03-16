@@ -6,9 +6,11 @@
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QLineEdit>
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #ifndef Q_MOC_RUN
 #include <rclcpp/rclcpp.hpp>
@@ -27,6 +29,8 @@ class StatusWidget : public QWidget {
 	rclcpp::Node::SharedPtr _node;
 
    public Q_SLOTS:
+    void updateTopic();
+    
    private Q_SLOTS:
 
    protected:
@@ -34,11 +38,15 @@ class StatusWidget : public QWidget {
 
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
+    std::string subTopic = "/ins/ncom";
 
 	void initLayout();
 
+    QLineEdit* TopicEditor;
+
 	QNavStatusLabel* NavStatus;
 
+    QTextLabel* TopicLabel;
 	QTextLabel* NavLabel;
 	QTextLabel* EastAccLabel;
 	QTextLabel* NorthAccLabel;
