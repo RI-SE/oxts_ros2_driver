@@ -11,13 +11,13 @@ StatusWidget::StatusWidget(QWidget* parent) : QWidget(parent) {
 	RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
 
 	initLayout();
-    //* Connects the topic editor to the updateTopic function
+	//* Connects the topic editor to the updateTopic function
 	connect(TopicEditor, SIGNAL(editingFinished()), this, SLOT(updateTopic()));
 
-    //* Create NCOM object
+	//* Create NCOM object
 	nrx = NComCreateNComRxC();
 
-    //* Add all status labels to container to easily iterate over them
+	//* Add all status labels to container to easily iterate over them
 	statusLabels.push_back(NorthAccStatus);
 	statusLabels.push_back(EastAccStatus);
 	statusLabels.push_back(UpAccStatus);
@@ -45,13 +45,13 @@ void StatusWidget::updateTopic() {
 	try {
 		subNcom_ = _node->create_subscription<oxts_msgs::msg::Ncom>(
 			newTopic, 1, std::bind(&StatusWidget::ncomCallback, this, std::placeholders::_1));
-        subTopic = newTopic;
-	    RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
+		subTopic = newTopic;
+		RCLCPP_INFO(_node->get_logger(), "Subscribing to %s", subTopic.c_str());
 
-        //* Reset styles until valid data is received
-        for(auto label : statusLabels) {
-            label->initStyle();
-        }
+		//* Reset styles until valid data is received
+		for (auto label : statusLabels) {
+			label->initStyle();
+		}
 	} catch (const rclcpp::exceptions::InvalidTopicNameError& e) {
 		RCLCPP_WARN(_node->get_logger(), "%s", e.what());
 	}
@@ -59,7 +59,7 @@ void StatusWidget::updateTopic() {
 
 /**
  * @brief Initializes all QLabel objects and adds them to a layout
-*/
+ */
 void StatusWidget::initLayout() {
 	TopicEditor = new QLineEdit(this);
 	TopicEditor->setPlaceholderText("/ins/ncom");
@@ -138,6 +138,6 @@ void StatusWidget::ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg) {
 			SatStatusPrimary->setValue(this->nrx->mGpsPrimary->mNumSats);
 		if (this->nrx->mGpsSecondary->mIsNumSatsValid)
 			SatStatusSecondary->setValue(this->nrx->mGpsSecondary->mNumSats);
-    }
+	}
 }
 }  // namespace oxts_rviz_plugins
