@@ -1,5 +1,4 @@
 <library path="oxts_rviz_plugins">
-
     <class 
         name="oxts_rviz_plugins/StatusPanel" 
         type="oxts_rviz_plugins::StatusPanel" 

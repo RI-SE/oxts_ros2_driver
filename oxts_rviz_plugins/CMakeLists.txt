@@ -5,20 +5,13 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-# if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-# endif()
-
 # Qt5 boilerplate options from http://doc.qt.io/qt-5/cmake-manual.html
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-
 find_package(ament_cmake REQUIRED)
 
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
 find_package(oxts_msgs REQUIRED)
 
 find_package(class_loader REQUIRED)
@@ -73,8 +66,6 @@ set (dependencies
     rviz_default_plugins
     rviz_rendering
     rviz_ogre_vendor
-    sensor_msgs
-    std_msgs
     oxts_msgs
 )
 
@@ -122,9 +113,8 @@ ament_export_targets(${library_name} HAS_LIBRARY_TARGET)
 ament_export_dependencies(
     Qt5
     rviz_common
-    sensor_msgs
-    std_msgs
     rclcpp
+    oxts_msgs
 )
 
 ament_package()
