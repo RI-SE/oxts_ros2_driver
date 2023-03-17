@@ -2,13 +2,13 @@
 
 #include <QGridLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QString>
 #include <QWidget>
-#include <QLineEdit>
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #ifndef Q_MOC_RUN
 #include <rclcpp/rclcpp.hpp>
@@ -27,20 +27,20 @@ class StatusWidget : public QWidget {
 	rclcpp::Node::SharedPtr _node;
 
    public Q_SLOTS:
-    void updateTopic();
+	void updateTopic();
 
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
-    std::string subTopic = "/ins/ncom";
-    void ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg);
+	std::string subTopic = "/ins/ncom";
+	void ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg);
 
 	void initLayout();
 
-    QLineEdit* TopicEditor;
+	QLineEdit* TopicEditor;
 
 	QNavStatusLabel* NavStatus;
 
-    QTextLabel* TopicLabel;
+	QTextLabel* TopicLabel;
 	QTextLabel* NavLabel;
 	QTextLabel* EastAccLabel;
 	QTextLabel* NorthAccLabel;
@@ -61,7 +61,7 @@ class StatusWidget : public QWidget {
 	QSatStatusLabel* SatStatusPrimary;
 	QSatStatusLabel* SatStatusSecondary;
 
-    std::vector<QInitializedLabel*> statusLabels;
+	std::vector<QInitializedLabel*> statusLabels;
 
 	NComRxC* nrx;
 };
