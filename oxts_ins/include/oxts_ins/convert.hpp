@@ -39,6 +39,7 @@
 #include <geometry_msgs/msg/transform_stamped.h>
 #include <oxts_msgs/msg/ncom.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 // Boost includes
 #include <boost/asio.hpp>
 
@@ -96,6 +97,7 @@ private:
   uint8_t pub_path_rate;
   /*! Historical data for Path message. */
   std::vector<geometry_msgs::msg::PoseStamped> past_poses;
+  std::vector<geometry_msgs::msg::PoseStamped> past_vehicle_poses;
   /*! Publishing rate for TimeReference message.*/
   uint8_t pub_time_reference_rate;
   /*! Publishing rate for PointStamped message. */
@@ -128,6 +130,7 @@ private:
   std::string nav_sat_fix_topic;
   std::string velocity_topic;
   std::string odometry_topic;
+  std::string odometry_vehicle_topic;
   std::string path_topic;
   std::string time_reference_topic;
   std::string ecef_pos_topic;
@@ -135,6 +138,16 @@ private:
   std::string lever_arm_topic;
   std::string imu_bias_topic;
   std::string imu_topic;
+
+  // Approximate mounting of unit in relation to vehicle
+  // Should be in 90 degrees angles from vehicle
+  double device2vehicle_roll = 0.0;
+  double device2vehicle_pitch = 0.0;
+  double device2vehicle_yaw = 0.0;
+  double device2vehicle_tolerance = 5.0;
+  // In RPY order
+  tf2::Quaternion device2vehicle;
+
   // ...
 
   void ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg);
@@ -154,8 +167,10 @@ private:
   void velocity(std_msgs::msg::Header header);
   /** Callback function for Odometry message. Wraps message and publishes. */
   void odometry(std_msgs::msg::Header header);
+  void odometry_vehicle(std_msgs::msg::Header header);
   /** Callback function for Path message. Wraps message and publishes. */
   void path(std_msgs::msg::Header header);
+  void vehicle_path(std_msgs::msg::Header header);
   /** Callback function for PointStamped message. Wraps message and
    *  publishes.*/
   void ecef_pos(std_msgs::msg::Header header);
@@ -184,8 +199,10 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocity_;
   /** Publisher for /nav_msgs/msg/Odometry */
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometry_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometryVehicle_;
   /** Publisher for /nav_msgs/msg/Path */
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubVehiclePath_;
   /** Publisher for /sensor_msgs/msg/TimeReference */
   rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr
       pubTimeReference_;
@@ -237,6 +254,7 @@ public:
         this->declare_parameter("nav_sat_fix_topic", "nav_sat_fix");
     velocity_topic = this->declare_parameter("velocity_topic", "velocity");
     odometry_topic = this->declare_parameter("odometry_topic", "odometry");
+    odometry_vehicle_topic = this->declare_parameter("odometry_vehicle_topic", "odometry_vehicle");
     path_topic = this->declare_parameter("path_topic", "path");
     time_reference_topic =
         this->declare_parameter("time_reference_topic", "time_reference");
@@ -246,6 +264,16 @@ public:
     lever_arm_topic = this->declare_parameter("lever_arm_topic", "lever_arm");
     imu_bias_topic = this->declare_parameter("imu_bias_topic", "imu_bias");
     imu_topic = this->declare_parameter("imu_topic", "imu");
+
+    device2vehicle_roll = this->declare_parameter("device2vehicle_roll", 0.0);
+    device2vehicle_pitch = this->declare_parameter("device2vehicle_pitch", 0.0);
+    device2vehicle_yaw = this->declare_parameter("device2vehicle_yaw", 0.0);
+    device2vehicle.setRPY(
+      NAV_CONST::DEG2RADS * device2vehicle_roll, 
+      NAV_CONST::DEG2RADS * device2vehicle_pitch, 
+      NAV_CONST::DEG2RADS * device2vehicle_yaw);
+    device2vehicle_tolerance = this->declare_parameter("device2vehicle_tolerance", 5.0);
+
 
     /** @todo Improve error handling */
     if (ncom_rate == 0) {
@@ -328,6 +356,9 @@ public:
       // Create publisher
       pubOdometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
           topic_prefix + "/" + odometry_topic, 10);
+      
+      pubOdometryVehicle_ = this->create_publisher<nav_msgs::msg::Odometry>(
+          topic_prefix + "/" + odometry_vehicle_topic, 10);
     }
     if (pubPathInterval) {
       // Throw an error if ncom_rate / Path_rate is not an integer
@@ -339,6 +370,9 @@ public:
       // Create publisher
       pubPath_ = this->create_publisher<nav_msgs::msg::Path>(
           topic_prefix + "/" + path_topic, 10);
+
+      pubVehiclePath_ = this->create_publisher<nav_msgs::msg::Path>(
+          topic_prefix + "/" + path_topic + "_vehicle", 10);
     }
     if (pubTimeReferenceInterval) {
       // Throw an error if ncom_rate / TimeReference_rate is not an integer

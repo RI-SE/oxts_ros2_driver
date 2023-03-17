@@ -92,11 +92,12 @@ public:
       return:
       number of bytes received, if it fails prints error code and returns 0.
   */
-  std::size_t receive_from(byte *recv_buffer, std::size_t size_of_buffer,
+   std::size_t receive_from(byte *recv_buffer, std::size_t size_of_buffer,
                            const udp::endpoint &required_sender_endpoint) {
     boost::system::error_code error_code;
     std::size_t bytes_received = 0;
     udp::endpoint sender_endpoint;
+    
     try {
       // opens a IPv4 socket then binds to it - uses local system ip and port
       // specified in constructor
@@ -106,7 +107,8 @@ public:
         bytes_received = socket.receive_from(
             boost::asio::buffer(recv_buffer, size_of_buffer), sender_endpoint,
             0, error_code);
-      } while (sender_endpoint != required_sender_endpoint);
+
+      } while ( sender_endpoint.address() != required_sender_endpoint.address() );
       socket.close(error_code);
 #ifdef EXTRA_DETAIL
       std::cout << "Bytes received - " << bytes_received << std::endl;

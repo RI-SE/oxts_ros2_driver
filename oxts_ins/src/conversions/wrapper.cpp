@@ -56,6 +56,15 @@ tf2::Quaternion getVehRPY(const NComRxC *nrx) {
   return rpyVehENU;
 }
 
+tf2::Quaternion getIsoVehRPY(const NComRxC *nrx) {
+  auto rpyVehIso = tf2::Quaternion(); // Orientation of the vehicle (ENU frame)
+
+  rpyVehIso.setRPY(NAV_CONST::DEG2RADS * nrx->mIsoRoll,
+                   NAV_CONST::DEG2RADS * nrx->mIsoPitch,
+                   NAV_CONST::DEG2RADS * nrx->mIsoYaw);
+  return rpyVehIso;
+}
+
 tf2::Quaternion getBodyRPY(const NComRxC *nrx) {
   auto rpyVehENU =
       RosNComWrapper::getVehRPY(nrx); // Orientation of the vehicle (ENU frame)
@@ -294,6 +303,60 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
   return msg;
 }
 
+geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
+                                          std_msgs::msg::Header head, const tf2::Quaternion& device2vehicle) {
+  auto msg = geometry_msgs::msg::TwistStamped();
+  msg.header = std::move(head);
+
+  // Construct vehicle-imu frame transformation --------------------------------
+  auto q_vat = getVat(nrx);
+  auto r_vat = tf2::Matrix3x3(q_vat);
+  auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
+  auto veh_w = tf2::Vector3(nrx->mWx, nrx->mWy, nrx->mWz);
+  auto imu_w = tf2::Vector3();
+  auto imu_v = tf2::Vector3();
+  auto q_iso_oxts = tf2::Quaternion();
+
+  q_iso_oxts.setRPY(180.0 * NAV_CONST::DEG2RADS, 0.0, 0.0);
+  auto r_iso_oxts = tf2::Matrix3x3(q_iso_oxts);
+
+  imu_v = r_vat * r_iso_oxts * veh_v;
+  imu_w = r_vat * veh_w;
+  
+  // Placement in rig/car
+  auto r_device2vehicle = tf2::Matrix3x3(device2vehicle);
+  imu_v = imu_v * r_device2vehicle;
+  imu_w = imu_w * r_device2vehicle;
+
+  msg.twist.linear.x = imu_v.getX();
+  msg.twist.linear.y = imu_v.getY();
+  msg.twist.linear.z = imu_v.getZ();
+  msg.twist.angular.x = imu_w.getX();
+  msg.twist.angular.y = imu_w.getY();
+  msg.twist.angular.z = imu_w.getZ();
+
+  return msg;
+}
+
+// geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
+//                                                   std_msgs::msg::Header head) {
+//   auto msg = geometry_msgs::msg::TwistStamped();
+//   msg.header = std::move(head);
+
+//   auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
+//   auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
+  
+//   // std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
+//   msg.twist.linear.x = veh_v.getX();
+//   msg.twist.linear.y = veh_v.getY();
+//   msg.twist.linear.z = veh_v.getZ();
+//   msg.twist.angular.x = veh_w.getX(); 
+//   msg.twist.angular.y = veh_w.getY();
+//   msg.twist.angular.z = -veh_w.getZ(); //Wrong sign from NCOM??. TODO: check above
+
+//   return msg;
+// }
+
 tf2::Matrix3x3 getRotEnuToEcef(double lat0, double lon0) {
   double lambda = (lon0)*NAV_CONST::DEG2RADS;
   double phi = (lat0)*NAV_CONST::DEG2RADS;
@@ -388,6 +451,124 @@ nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
 
   return msg;
 }
+
+nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
+                                         const std_msgs::msg::Header &head, 
+                                         Lrf lrf, 
+                                         const tf2::Quaternion& device2vehicle,
+                                         const double device2vehicle_tolerance) {
+  auto msg = nav_msgs::msg::Odometry();
+  msg.header = head;
+  msg.child_frame_id = "odom_imu"; // odom_imu to match LIO-SAM imuPreintegration
+  
+  // pose with covariance ======================================================
+
+  Point::Cart p_enu;
+  p_enu = NavConversions::geodeticToEnu(nrx->mLat, nrx->mLon, nrx->mAlt,
+                                        lrf.lat(), lrf.lon(), lrf.alt());
+
+  Point::Cart p_lrf =
+      NavConversions::enuToLrf(p_enu.x(), p_enu.y(), p_enu.z(), lrf.heading());
+
+  msg.pose.pose.position.x = p_lrf.x();
+  msg.pose.pose.position.y = p_lrf.y();
+  msg.pose.pose.position.z = p_lrf.z();
+
+  // Orientation of body (oxts unit) in ENU
+  auto rpyBodENU = RosNComWrapper::getBodyRPY(nrx);
+  // ENU to LRF rotation
+  auto enu2lrf = tf2::Quaternion();
+  enu2lrf.setRPY(0, 0, lrf.heading());
+
+  // transform from ENU to LRF
+  auto rpyBodLRF = tf2::Quaternion();
+  // Body in LRF
+  rpyBodLRF = enu2lrf * rpyBodENU;
+
+  // Placement in rig/car
+  auto result = rpyBodLRF*device2vehicle;
+
+  msg.pose.pose.orientation.x = result.x();
+  msg.pose.pose.orientation.y = result.y();
+  msg.pose.pose.orientation.z = result.z();
+  msg.pose.pose.orientation.w = result.w();
+
+  // Do a sanity check
+  double roll, pitch, yaw; 
+  tf2::Matrix3x3 rpyUnit(result);  
+  rpyUnit.getRPY(roll, pitch, yaw); // Radians
+  double rollDiff, pitchDiff, yawDiff;
+  rollDiff = roll*180.0*M_1_PI - nrx->mIsoRoll; // Degrees
+  pitchDiff = pitch*180.0*M_1_PI - nrx->mIsoPitch;
+  yawDiff = yaw*180.0*M_1_PI - nrx->mIsoYaw;
+
+
+  if(std::fabs(rollDiff) > device2vehicle_tolerance 
+      || std::fabs(pitchDiff) > device2vehicle_tolerance 
+      || std::fabs(yawDiff) > device2vehicle_tolerance) {
+
+    std::cout << "\nWARNING: Device and ISO RPY differ by more than " 
+      << device2vehicle_tolerance << " degrees. Double check your settings!" << std::endl;
+
+    std::cout << "rollDiff: " << rollDiff << std::endl;
+    std::cout << "pitchDiff: " << pitchDiff << std::endl;
+    std::cout << "yawDiff: " << yawDiff << std::endl;
+
+    std::cout << "Unit roll: " << roll*180*M_1_PI << std::endl;
+    std::cout << "Unit pitch: " << pitch*180*M_1_PI << std::endl;
+    std::cout << "Unit yaw: " << yaw*180*M_1_PI << std::endl;
+    // Should be very close
+    std::cout << "ISO roll: " << nrx->mIsoRoll << std::endl;
+    std::cout << "ISO pitch: " << nrx->mIsoPitch << std::endl;
+    std::cout << "ISO yaw: " << nrx->mIsoYaw << std::endl;
+
+    // Revert to vehicle frame
+    auto rpyVehENU = RosNComWrapper::getIsoVehRPY(nrx);
+    auto rpyVehLRF = tf2::Quaternion();
+    rpyVehLRF = enu2lrf * rpyVehENU;
+    msg.pose.pose.orientation.x = rpyVehLRF.x();
+    msg.pose.pose.orientation.y = rpyVehLRF.y();
+    msg.pose.pose.orientation.z = rpyVehLRF.z();
+    msg.pose.pose.orientation.w = rpyVehLRF.w();
+ }
+
+  // Covariance from NCom is in the NED local coordinate frame. This must be
+  // rotated into the LRF
+
+  // rotation from the ENU frame defined by the LRF origin to the full LRF frame
+  tf2::Matrix3x3 r_enu_lrf = getRotEnuToLrf(lrf.heading());
+  // rotation from ECEF frame to the ENU frame defined by the LRF origin
+  tf2::Matrix3x3 r_ecef_enu = getRotEnuToEcef(lrf.lat(), lrf.lon()).transpose();
+  // rotation from ECEF frame to the ENU frame defined by the current position
+  tf2::Matrix3x3 r_pos_ecef = getRotEnuToEcef(nrx->mLat, nrx->mLon);
+
+  auto diff = tf2::Matrix3x3(r_enu_lrf);
+  diff *= r_ecef_enu;
+  diff *= r_pos_ecef;
+
+  auto tmp = tf2::Matrix3x3(diff);
+  auto cov = tf2::Matrix3x3(std::pow(nrx->mEastAcc, 2), 0.0, 0.0,
+                            0.0, std::pow(nrx->mNorthAcc, 2), 0.0,
+                            0.0, 0.0, std::pow(nrx->mAltAcc, 2));
+  // cov_b = R * cov_a * R^T
+  tmp *= cov;
+  tmp *= diff.transpose();
+
+  // Copy the position covariance data into the output message
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      msg.pose.covariance[(6 * i) + j] = tmp[i][j];
+
+  // twist =====================================================================
+
+  auto twist_stamped = RosNComWrapper::velocity_vehicle(nrx, head, device2vehicle);
+  msg.twist.twist = twist_stamped.twist;
+
+  /** \todo Twist covariance */
+
+  return msg;
+}
+
 
 nav_msgs::msg::Path
 path(const std::vector<geometry_msgs::msg::PoseStamped> &poses,
