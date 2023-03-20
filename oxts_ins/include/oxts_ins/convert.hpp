@@ -128,6 +128,7 @@ private:
   std::string nav_sat_fix_topic;
   std::string velocity_topic;
   std::string odometry_topic;
+  std::string odometry_vehicle_topic;
   std::string path_topic;
   std::string time_reference_topic;
   std::string ecef_pos_topic;
@@ -154,6 +155,7 @@ private:
   void velocity(std_msgs::msg::Header header);
   /** Callback function for Odometry message. Wraps message and publishes. */
   void odometry(std_msgs::msg::Header header);
+  void odometry_vehicle(std_msgs::msg::Header header);
   /** Callback function for Path message. Wraps message and publishes. */
   void path(std_msgs::msg::Header header);
   /** Callback function for PointStamped message. Wraps message and
@@ -184,6 +186,7 @@ private:
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocity_;
   /** Publisher for /nav_msgs/msg/Odometry */
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometry_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometryVehicle_;
   /** Publisher for /nav_msgs/msg/Path */
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
   /** Publisher for /sensor_msgs/msg/TimeReference */
@@ -237,6 +240,7 @@ public:
         this->declare_parameter("nav_sat_fix_topic", "nav_sat_fix");
     velocity_topic = this->declare_parameter("velocity_topic", "velocity");
     odometry_topic = this->declare_parameter("odometry_topic", "odometry");
+    odometry_vehicle_topic = this->declare_parameter("odometry_vehicle_topic", "odometry_vehicle");
     path_topic = this->declare_parameter("path_topic", "path");
     time_reference_topic =
         this->declare_parameter("time_reference_topic", "time_reference");
@@ -328,6 +332,9 @@ public:
       // Create publisher
       pubOdometry_ = this->create_publisher<nav_msgs::msg::Odometry>(
           topic_prefix + "/" + odometry_topic, 10);
+      
+      pubOdometryVehicle_ = this->create_publisher<nav_msgs::msg::Odometry>(
+          topic_prefix + "/" + odometry_vehicle_topic, 10);
     }
     if (pubPathInterval) {
       // Throw an error if ncom_rate / Path_rate is not an integer
