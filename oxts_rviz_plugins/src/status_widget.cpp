@@ -88,9 +88,9 @@ void StatusWidget::initLayout() {
 
 	NavStatus = new QNavStatusLabel(this);
 
-	RollAccStatus->setLimits(0.2, 0.5);
-	PitchAccStatus->setLimits(0.2, 0.5);
-	YawAccStatus->setLimits(0.2, 0.5);
+	RollAccStatus->setLimits(0.06, 0.5);
+	PitchAccStatus->setLimits(0.06, 0.5);
+	YawAccStatus->setLimits(0.2, 1.0);
 
 	QGridLayout* grid = new QGridLayout(this);
 
