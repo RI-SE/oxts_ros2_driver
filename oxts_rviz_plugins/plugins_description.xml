@@ -1,0 +1,11 @@
+<library path="oxts_rviz_plugins">
+    <class 
+        name="oxts_rviz_plugins/StatusPanel" 
+        type="oxts_rviz_plugins::StatusPanel" 
+        base_class_type="rviz_common::Panel">
+        <description>
+            Panel to show nav status
+        </description>
+    </class>
+    
+</library>
