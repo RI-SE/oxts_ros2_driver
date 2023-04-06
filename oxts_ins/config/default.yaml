@@ -37,10 +37,10 @@ oxts_ins:
     pub_ecef_pos_rate       : 0
     ecef_pos_topic          : "ecef_pos"
     ### Publish OxTS NavSatRef message
-    pub_nav_sat_ref_rate    : 10
+    pub_nav_sat_ref_rate    : 1
     nav_sat_ref_topic       : "nav_sat_ref"
     ### Publish OxTS Lever Arm message
-    pub_lever_arm_rate      : 5
+    pub_lever_arm_rate      : 0
     lever_arm_topic         : "lever_arm"
     ### Publish OxTS IMU Bias message
     pub_imu_bias_rate       : 5
@@ -62,7 +62,7 @@ oxts_ins:
     ### Assuming the lidar and unit is more aligned!
     device2vehicle_roll       : 0.0 # [Deg]
     device2vehicle_pitch      : 0.0 # [Deg]
-    device2vehicle_yaw        : 0.0 # [Deg]
+    device2vehicle_yaw        : -90.0 # [Deg]
     device2vehicle_tolerance  : 5.0 # [Deg] # Use ISO RPY if difference is larger than this
 
     
