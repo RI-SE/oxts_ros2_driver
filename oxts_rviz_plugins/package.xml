@@ -25,6 +25,7 @@
   <depend>rviz_rendering</depend>
   <depend>rviz_default_plugins</depend>
   <depend>pluginlib</depend>
+  <depend>oxts_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
