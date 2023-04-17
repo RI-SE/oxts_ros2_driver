@@ -38,8 +38,10 @@ void OxtsIns::ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg) {
     if (this->pubNavSatFixInterval &&
         (sec_idx % this->pubNavSatFixInterval == 0))
       this->nav_sat_fix(msg->header);
-    if (this->pubVelocityInterval && (sec_idx % this->pubVelocityInterval == 0))
+    if (this->pubVelocityInterval && (sec_idx % this->pubVelocityInterval == 0)) {
       this->velocity(msg->header);
+      this->velocity_vehicle(msg->header);
+    }
     if (this->pubOdometryInterval && (sec_idx % this->pubOdometryInterval == 0)) {
       this->odometry(msg->header);
       this->odometry_vehicle(msg->header);
@@ -166,6 +168,12 @@ void OxtsIns::velocity(std_msgs::msg::Header header) {
   header.frame_id = "oxts_link";
   auto msg = RosNComWrapper::velocity(this->nrx, header);
   pubVelocity_->publish(msg);
+}
+
+void OxtsIns::velocity_vehicle(std_msgs::msg::Header header) {
+  header.frame_id = "oxts_link";
+  auto msg = RosNComWrapper::velocity_vehicle(this->nrx, header, this->device2vehicle);
+  pubVelocityVehicle_->publish(msg);
 }
 
 void OxtsIns::odometry(std_msgs::msg::Header header) {
