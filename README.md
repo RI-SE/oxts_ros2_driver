@@ -34,7 +34,7 @@ colcon build
 
 ## Configuring and launching the driver
 
-The driver is configured using .yaml files, as is the norm for ROS2 nodes. The default files in this folder contain lists of all configurable parameters for the nodes. These can be deleted to make the file smaller / tidier. Values not in the config file will remain as defaults.
+The driver is configured using .yaml files, as is the norm for ROS2 nodes. The default files in *oxts_driver/* and *oxts_ins/* config folder contain lists of all configurable parameters for the nodes. These can be deleted to make the file smaller / tidier. Values not in the config file will remain as defaults.
 
 Launch files can be used from /launch. Launch files are created in Python3 for ROS2, so be aware that Python3 will need to be installed on the machine. They can be use like so:
 
