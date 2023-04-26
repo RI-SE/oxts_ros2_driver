@@ -130,8 +130,10 @@ private:
   std::string nav_sat_fix_topic;
   std::string velocity_topic;
   std::string velocity_vehicle_topic;
+  std::string velocity_lidar_topic;
   std::string odometry_topic;
   std::string odometry_vehicle_topic;
+  std::string odometry_lidar_topic;
   std::string path_topic;
   std::string time_reference_topic;
   std::string ecef_pos_topic;
@@ -167,9 +169,11 @@ private:
   /** Callback function for Velocity message. Wraps message and publishes. */
   void velocity(std_msgs::msg::Header header);
   void velocity_vehicle(std_msgs::msg::Header header);
+  void velocity_lidar(std_msgs::msg::Header header);
   /** Callback function for Odometry message. Wraps message and publishes. */
   void odometry(std_msgs::msg::Header header);
   void odometry_vehicle(std_msgs::msg::Header header);
+  void odometry_lidar(std_msgs::msg::Header header);
   /** Callback function for Path message. Wraps message and publishes. */
   void path(std_msgs::msg::Header header);
   void vehicle_path(std_msgs::msg::Header header);
@@ -200,9 +204,11 @@ private:
   /** Publisher for /sensor_msgs/msg/TwistStamped */
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocity_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocityVehicle_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr pubVelocityLidar_;
   /** Publisher for /nav_msgs/msg/Odometry */
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometry_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometryVehicle_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometryLidar_;
   /** Publisher for /nav_msgs/msg/Path */
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubVehiclePath_;
@@ -258,8 +264,11 @@ public:
     velocity_topic = this->declare_parameter("velocity_topic", "velocity");
     velocity_vehicle_topic =
         this->declare_parameter("velocity_vehicle_topic", "velocity_vehicle");
+    velocity_lidar_topic =
+        this->declare_parameter("velocity_lidar_topic", "velocity_lidar");        
     odometry_topic = this->declare_parameter("odometry_topic", "odometry");
     odometry_vehicle_topic = this->declare_parameter("odometry_vehicle_topic", "odometry_vehicle");
+    odometry_lidar_topic = this->declare_parameter("odometry_lidar_topic", "odometry_lidar");
     path_topic = this->declare_parameter("path_topic", "path");
     time_reference_topic =
         this->declare_parameter("time_reference_topic", "time_reference");
@@ -353,6 +362,9 @@ public:
 
       pubVelocityVehicle_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
           topic_prefix + "/" + velocity_vehicle_topic, 10);
+
+      pubVelocityLidar_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
+          topic_prefix + "/" + velocity_lidar_topic, 10);
     }
     if (pubOdometryInterval) {
       // Throw an error if ncom_rate / Odometry_rate is not an integer
@@ -367,6 +379,9 @@ public:
       
       pubOdometryVehicle_ = this->create_publisher<nav_msgs::msg::Odometry>(
           topic_prefix + "/" + odometry_vehicle_topic, 10);
+
+      pubOdometryLidar_ = this->create_publisher<nav_msgs::msg::Odometry>(
+          topic_prefix + "/" + odometry_lidar_topic, 10);
     }
     if (pubPathInterval) {
       // Throw an error if ncom_rate / Path_rate is not an integer

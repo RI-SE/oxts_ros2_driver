@@ -41,10 +41,12 @@ void OxtsIns::ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg) {
     if (this->pubVelocityInterval && (sec_idx % this->pubVelocityInterval == 0)) {
       this->velocity(msg->header);
       this->velocity_vehicle(msg->header);
+      this->velocity_lidar(msg->header);
     }
     if (this->pubOdometryInterval && (sec_idx % this->pubOdometryInterval == 0)) {
       this->odometry(msg->header);
       this->odometry_vehicle(msg->header);
+      this->odometry_lidar(msg->header);
     }
     if (this->pubPathInterval && (sec_idx % this->pubPathInterval == 0)) {
       this->path(msg->header);
@@ -172,7 +174,13 @@ void OxtsIns::velocity(std_msgs::msg::Header header) {
 
 void OxtsIns::velocity_vehicle(std_msgs::msg::Header header) {
   header.frame_id = "oxts_link";
-  auto msg = RosNComWrapper::velocity_vehicle(this->nrx, header, this->device2vehicle);
+  auto msg = RosNComWrapper::velocity(this->nrx, header);
+  pubVelocity_->publish(msg);
+}
+
+void OxtsIns::velocity_lidar(std_msgs::msg::Header header) {
+  header.frame_id = "oxts_link";
+  auto msg = RosNComWrapper::velocity_lidar(this->nrx, header, this->device2vehicle);
   pubVelocityVehicle_->publish(msg);
 }
 
@@ -197,7 +205,7 @@ void OxtsIns::odometry_vehicle(std_msgs::msg::Header header) {
   // Set the LRF if - we haven't set it before (unless using NCOM LRF)
   this->getLrf();
   if (this->lrf_valid) {
-    auto msg = RosNComWrapper::odometry_vehicle(this->nrx, header, this->lrf, this->device2vehicle, this->device2vehicle_tolerance);
+    auto msg = RosNComWrapper::odometry_vehicle(this->nrx, header, this->lrf);
     if (this->pubPathInterval) {
       auto new_pose_stamped = geometry_msgs::msg::PoseStamped();
       new_pose_stamped.header = msg.header;
@@ -205,6 +213,22 @@ void OxtsIns::odometry_vehicle(std_msgs::msg::Header header) {
       this->past_vehicle_poses.push_back(new_pose_stamped);
     }
     pubOdometryVehicle_->publish(msg);
+  }
+}
+
+void OxtsIns::odometry_lidar(std_msgs::msg::Header header) {
+  header.frame_id = this->pub_odometry_frame_id;
+  // Set the LRF if - we haven't set it before (unless using NCOM LRF)
+  this->getLrf();
+  if (this->lrf_valid) {
+    auto msg = RosNComWrapper::odometry_lidar(this->nrx, header, this->lrf, this->device2vehicle, this->device2vehicle_tolerance);
+    if (this->pubPathInterval) {
+      auto new_pose_stamped = geometry_msgs::msg::PoseStamped();
+      new_pose_stamped.header = msg.header;
+      new_pose_stamped.pose = msg.pose.pose;
+      this->past_vehicle_poses.push_back(new_pose_stamped);
+    }
+    pubOdometryLidar_->publish(msg);
   }
 }
 
@@ -231,6 +255,7 @@ void OxtsIns::getLrf() {
   if (this->lrf_source == LRF_SOURCE::NCOM_LRF && nrx->mIsRefLatValid) {
     this->lrf = RosNComWrapper::getNcomLrf(nrx);
     this->lrf_valid = true;
+    RCLCPP_INFO(this->get_logger(), "LRF set to NCOM");
   }
   // Configured to come from the first NCom packet
   else if (!this->lrf_valid && this->lrf_source == LRF_SOURCE::NCOM_FIRST) {
@@ -238,11 +263,13 @@ void OxtsIns::getLrf() {
     // mHeading is in NED. Get angle between LRF and ENU
     this->lrf.heading((nrx->mHeading - 90) * NAV_CONST::DEG2RADS);
     this->lrf_valid = true;
+    RCLCPP_INFO(this->get_logger(), "LRF set to first NCOM");
   } else if (!this->lrf_valid &&
              this->lrf_source == LRF_SOURCE::NCOM_FIRST_ENU) {
     this->lrf.origin(nrx->mLat, nrx->mLon, nrx->mAlt);
     this->lrf.heading((0.0) * NAV_CONST::DEG2RADS); // LRF aligned to ENU
     this->lrf_valid = true;
+    RCLCPP_INFO(this->get_logger(), "LRF set to first NCOM aligned to ENU");
   }
 }
 

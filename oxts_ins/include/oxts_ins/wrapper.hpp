@@ -179,6 +179,9 @@ geometry_msgs::msg::TwistStamped velocity(const NComRxC *nrx,
                                           std_msgs::msg::Header head);
 
 geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
+                                          std_msgs::msg::Header head);                                   
+
+geometry_msgs::msg::TwistStamped velocity_lidar(const NComRxC *nrx,
                                                   std_msgs::msg::Header head, const tf2::Quaternion& q);
 
 /**
@@ -190,6 +193,7 @@ geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
  */
 nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
                                  const std_msgs::msg::Header &head, Lrf lrf);
+
 /**
  * Wrap navigation data from NCom decoder to nav_msgs/msg/Odometry
  *
@@ -198,6 +202,16 @@ nav_msgs::msg::Odometry odometry(const NComRxC *nrx,
  * @returns
  */
 nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
+                                 const std_msgs::msg::Header &head, Lrf lrf);
+
+/**
+ * Wrap navigation data from NCom decoder to nav_msgs/msg/Odometry
+ *
+ * @param nrx Pointer to the decoded NCom data
+ * @param head Header to be added to the published message
+ * @returns
+ */
+nav_msgs::msg::Odometry odometry_lidar(const NComRxC *nrx,
                                         const std_msgs::msg::Header &head, 
                                         Lrf lrf, 
                                         const tf2::Quaternion& q,
