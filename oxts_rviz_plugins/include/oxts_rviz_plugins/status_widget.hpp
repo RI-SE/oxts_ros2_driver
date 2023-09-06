@@ -50,6 +50,7 @@ class StatusWidget : public QWidget {
 	QTextLabel* YawAccLabel;
 	QTextLabel* SatLabelPrimary;
 	QTextLabel* SatLabelSecondary;
+	QTextLabel* AValidLabel;
 
 	QDoubleLabel* NorthAccStatus;
 	QDoubleLabel* EastAccStatus;
@@ -57,6 +58,8 @@ class StatusWidget : public QWidget {
 	QDoubleLabel* RollAccStatus;
 	QDoubleLabel* PitchAccStatus;
 	QDoubleLabel* YawAccStatus;
+
+	QBoolLabel* AValidStatus;
 
 	QSatStatusLabel* SatStatusPrimary;
 	QSatStatusLabel* SatStatusSecondary;
