@@ -75,6 +75,8 @@ void StatusWidget::initLayout() {
 	YawAccLabel = new QTextLabel(this, "Yaw accuracy:");
 	SatLabelPrimary = new QTextLabel(this, "Primary antenna #satellites tracked:");
 	SatLabelSecondary = new QTextLabel(this, "Secondary antenna #satellites tracked:");
+	
+	AValidLabel = new QTextLabel(this, "Accelerometer data valid:");
 
 	NorthAccStatus = new QDoubleLabel(this);
 	EastAccStatus = new QDoubleLabel(this);
@@ -82,6 +84,8 @@ void StatusWidget::initLayout() {
 	RollAccStatus = new QDoubleLabel(this);
 	PitchAccStatus = new QDoubleLabel(this);
 	YawAccStatus = new QDoubleLabel(this);
+
+	AValidStatus = new QBoolLabel(this);
 
 	SatStatusPrimary = new QSatStatusLabel(this);
 	SatStatusSecondary = new QSatStatusLabel(this);
@@ -114,6 +118,8 @@ void StatusWidget::initLayout() {
 	grid->addWidget(SatStatusPrimary, 8, 1);
 	grid->addWidget(SatLabelSecondary, 9, 0);
 	grid->addWidget(SatStatusSecondary, 9, 1);
+	grid->addWidget(AValidLabel, 10, 0);
+	grid->addWidget(AValidStatus, 10, 1);
 
 	setLayout(grid);
 }
@@ -138,6 +144,9 @@ void StatusWidget::ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg) {
 			SatStatusPrimary->setValue(this->nrx->mGpsPrimary->mNumSats);
 		if (this->nrx->mGpsSecondary->mIsNumSatsValid)
 			SatStatusSecondary->setValue(this->nrx->mGpsSecondary->mNumSats);
+		
+		bool aValid = this->nrx->mIsAxValid && this->nrx->mIsAyValid && this->nrx->mIsAzValid;
+		AValidStatus->setValue(aValid);
 	}
 }
 }  // namespace oxts_rviz_plugins

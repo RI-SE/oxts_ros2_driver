@@ -261,3 +261,43 @@ class QDoubleLabel : public QStatusLabel {
 
 	DoubleLimit limit;
 };
+
+/**
+ * @brief QLabel to hold information about validity flags
+ */
+class QBoolLabel : public QStatusLabel {
+	Q_OBJECT
+
+   public:
+	explicit QBoolLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags()) {
+		QInitializedLabel(parent, f);
+	}
+	virtual ~QBoolLabel(){};
+
+	/**
+	 * @brief Set the value of the label and updates the style based on value
+	 * @param flag Valid flag
+	 */
+	void setValue(const bool flag) {
+		if(flag) {
+			this->setText("Valid");
+		} else {
+			this->setText("Invalid");
+		}
+		updateStyle(flag);
+	}
+
+   private:
+	/**
+	 * @brief Update the style of the label based on the value
+	 * @param flag Valid flag
+	 */
+	void updateStyle(const bool flag) {
+		if (flag) {
+			this->setStyleSheet("background-color : green;");
+		} else {
+			this->setStyleSheet("background-color : red;");
+		}
+	}
+};
+
