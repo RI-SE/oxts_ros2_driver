@@ -63,9 +63,9 @@ oxts_ins:
     ### Rotations in RPY order how to turn the unit to align with the vehicle
     ### This compensates for small differences in mounting of the lidar and vehicle.
     ### Assuming the lidar and unit is more aligned!
-    device2vehicle_roll       : 0.0 # [Deg]
+    device2vehicle_roll       : -90.0 # [Deg]
     device2vehicle_pitch      : 0.0 # [Deg]
-    device2vehicle_yaw        : -90.0 # [Deg]
+    device2vehicle_yaw        : 0.0 # [Deg]
     device2vehicle_tolerance  : 5.0 # [Deg] # Use ISO RPY if difference is larger than this
 
     
