@@ -33,6 +33,9 @@ def generate_launch_description():
         ins_params = yaml.safe_load(f)["oxts_ins"]["ros__parameters"]
     yaml_frameid = ins_params.pop("frame_id","oxts_link")
     yaml_lrf = ins_params.pop("lrf_source",2)
+    yaml_d2v_roll = ins_params.pop("device2vehicle_roll",0.0)
+    yaml_d2v_pitch = ins_params.pop("device2vehicle_pitch",0.0)
+    yaml_d2v_yaw = ins_params.pop("device2vehicle_yaw",0.0)
     
     use_sim_time = LaunchConfiguration("use_sim_time", default="False")
     wait_for_init = LaunchConfiguration("wait_for_init", default="True")
@@ -77,6 +80,16 @@ def generate_launch_description():
     declare_lrf = DeclareLaunchArgument(
         "lrf_source", default_value=str(yaml_lrf), description="Set the lrf source"
     )
+    declare_d2v_roll = DeclareLaunchArgument(
+        'device2vehicle_roll', default_value=str(yaml_d2v_roll), description='Roll angle from device to vehicle frame'
+    )
+    declare_d2v_pitch = DeclareLaunchArgument(
+        'device2vehicle_pitch', default_value=str(yaml_d2v_pitch), description='Pitch angle from device to vehicle frame'
+    )
+    declare_d2v_yaw = DeclareLaunchArgument(
+        'device2vehicle_yaw', default_value=str(yaml_d2v_yaw), description='Yaw angle from device to vehicle frame'
+    )
+    
     oxts_driver_node = Node(
         package="oxts_driver",
         executable="oxts_driver",
@@ -122,6 +135,9 @@ def generate_launch_description():
     ld.add_action(declare_mode)
     ld.add_action(declare_frameid)
     ld.add_action(declare_lrf)
+    ld.add_action(declare_d2v_roll)
+    ld.add_action(declare_d2v_pitch)
+    ld.add_action(declare_d2v_yaw)
     # launch nodes
     ld.add_action(oxts_driver_node)
     ld.add_action(oxts_ins_node)
