@@ -45,6 +45,9 @@ def generate_launch_description():
     unit_port = LaunchConfiguration("unit_port",default=yaml_port)
     ncom_rate = LaunchConfiguration("ncom_rate",default=yaml_rate)
     timestamp_mode = LaunchConfiguration("timestamp_mode",default=yaml_timestamp)
+    dev2vehicle_roll = LaunchConfiguration("device2vehicle_roll",default=yaml_d2v_roll)
+    dev2vehicle_pitch = LaunchConfiguration("device2vehicle_pitch",default=yaml_d2v_pitch)
+    dev2vehicle_yaw = LaunchConfiguration("device2vehicle_yaw",default=yaml_d2v_yaw)
     
     frame_id = LaunchConfiguration("frame_id",default=yaml_frameid)
     lrf_source = LaunchConfiguration("lrf_source",default=yaml_lrf)
@@ -119,6 +122,9 @@ def generate_launch_description():
             {"topic_prefix": topic_prefix},
             {"frame_id": frame_id},
             {"lrf_source": lrf_source},
+            {"device2vehicle_roll": dev2vehicle_roll},
+            {"device2vehicle_pitch": dev2vehicle_pitch},
+            {"device2vehicle_yaw": dev2vehicle_yaw},
         ],
     )
 
