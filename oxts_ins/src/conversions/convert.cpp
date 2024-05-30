@@ -41,12 +41,16 @@ void OxtsIns::ncomCallbackRegular(const oxts_msgs::msg::Ncom::SharedPtr msg) {
     if (this->pubVelocityInterval && (sec_idx % this->pubVelocityInterval == 0)) {
       this->velocity(msg->header);
       this->velocity_vehicle(msg->header);
-      this->velocity_lidar(msg->header);
+      if (this->pub_lidar_flag){
+        this->velocity_lidar(msg->header);
+      }
     }
     if (this->pubOdometryInterval && (sec_idx % this->pubOdometryInterval == 0)) {
       this->odometry(msg->header);
       this->odometry_vehicle(msg->header);
-      this->odometry_lidar(msg->header);
+      if (this->pub_lidar_flag){
+        this->odometry_lidar(msg->header);
+      }
     }
     if (this->pubPathInterval && (sec_idx % this->pubPathInterval == 0)) {
       this->path(msg->header);
@@ -175,13 +179,13 @@ void OxtsIns::velocity(std_msgs::msg::Header header) {
 void OxtsIns::velocity_vehicle(std_msgs::msg::Header header) {
   header.frame_id = "oxts_link";
   auto msg = RosNComWrapper::velocity(this->nrx, header);
-  pubVelocity_->publish(msg);
+  pubVelocityVehicle_->publish(msg);
 }
 
 void OxtsIns::velocity_lidar(std_msgs::msg::Header header) {
   header.frame_id = "oxts_link";
   auto msg = RosNComWrapper::velocity_lidar(this->nrx, header, this->device2vehicle);
-  pubVelocityVehicle_->publish(msg);
+  pubVelocityLidar_->publish(msg);
 }
 
 void OxtsIns::odometry(std_msgs::msg::Header header) {

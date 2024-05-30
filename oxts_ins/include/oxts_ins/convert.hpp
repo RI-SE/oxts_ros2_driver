@@ -108,6 +108,8 @@ private:
   bool pub_imu_flag;
   /*! Flag to enable publishing of Tf messages. */
   bool pub_tf_flag;
+  /*! Flag to enable publishing of Lidar messages. */
+  bool pub_lidar_flag;
   /*! Publishing rate for lever arm message. */
   uint8_t pub_lever_arm_rate;
   /*! Publishing rate for IMU Bias message. */
@@ -264,11 +266,8 @@ public:
     velocity_topic = this->declare_parameter("velocity_topic", "velocity");
     velocity_vehicle_topic =
         this->declare_parameter("velocity_vehicle_topic", "velocity_vehicle");
-    velocity_lidar_topic =
-        this->declare_parameter("velocity_lidar_topic", "velocity_lidar");        
     odometry_topic = this->declare_parameter("odometry_topic", "odometry");
     odometry_vehicle_topic = this->declare_parameter("odometry_vehicle_topic", "odometry_vehicle");
-    odometry_lidar_topic = this->declare_parameter("odometry_lidar_topic", "odometry_lidar");
     path_topic = this->declare_parameter("path_topic", "path");
     time_reference_topic =
         this->declare_parameter("time_reference_topic", "time_reference");
@@ -279,6 +278,10 @@ public:
     imu_bias_topic = this->declare_parameter("imu_bias_topic", "imu_bias");
     imu_topic = this->declare_parameter("imu_topic", "imu");
 
+    pub_lidar_flag = this->declare_parameter("pub_lidar_flag", true);
+    velocity_lidar_topic =
+        this->declare_parameter("velocity_lidar_topic", "velocity_lidar");
+    odometry_lidar_topic = this->declare_parameter("odometry_lidar_topic", "odometry_lidar");
     device2vehicle_roll = this->declare_parameter("device2vehicle_roll", 0.0);
     device2vehicle_pitch = this->declare_parameter("device2vehicle_pitch", 0.0);
     device2vehicle_yaw = this->declare_parameter("device2vehicle_yaw", 0.0);
@@ -363,8 +366,10 @@ public:
       pubVelocityVehicle_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
           topic_prefix + "/" + velocity_vehicle_topic, 10);
 
-      pubVelocityLidar_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
-          topic_prefix + "/" + velocity_lidar_topic, 10);
+      if (pub_lidar_flag) {
+        pubVelocityLidar_ = this->create_publisher<geometry_msgs::msg::TwistStamped>(
+            topic_prefix + "/" + velocity_lidar_topic, 10);
+      }
     }
     if (pubOdometryInterval) {
       // Throw an error if ncom_rate / Odometry_rate is not an integer
@@ -380,8 +385,10 @@ public:
       pubOdometryVehicle_ = this->create_publisher<nav_msgs::msg::Odometry>(
           topic_prefix + "/" + odometry_vehicle_topic, 10);
 
-      pubOdometryLidar_ = this->create_publisher<nav_msgs::msg::Odometry>(
-          topic_prefix + "/" + odometry_lidar_topic, 10);
+      if (pub_lidar_flag) {
+        pubOdometryLidar_ = this->create_publisher<nav_msgs::msg::Odometry>(
+            topic_prefix + "/" + odometry_lidar_topic, 10);
+      }
     }
     if (pubPathInterval) {
       // Throw an error if ncom_rate / Path_rate is not an integer
