@@ -307,28 +307,6 @@ geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
                                           std_msgs::msg::Header head) {
   auto msg = geometry_msgs::msg::TwistStamped();
   msg.header = std::move(head);
-
-  // Construct vehicle-imu frame transformation --------------------------------
-
-  // auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
-  // auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
-  // auto imu_w = tf2::Vector3();
-  // auto imu_v = tf2::Vector3();
-  // auto q_iso_oxts = tf2::Quaternion();
-
-  // q_iso_oxts.setRPY(180.0 * NAV_CONST::DEG2RADS, 0.0, 0.0);
-  // auto r_iso_oxts = tf2::Matrix3x3(q_iso_oxts);
-
-  // imu_v = r_vat * r_iso_oxts * veh_v;
-  // imu_w = r_vat * veh_w;
-
-  // msg.twist.linear.x = imu_v.getX();
-  // msg.twist.linear.y = imu_v.getY();
-  // msg.twist.linear.z = imu_v.getZ();
-  // msg.twist.angular.x = imu_w.getX();
-  // msg.twist.angular.y = imu_w.getY();
-  // msg.twist.angular.z = imu_w.getZ();
-
   msg.twist.linear.x = nrx->mIsoVoX;
   msg.twist.linear.y = nrx->mIsoVoY;
   msg.twist.linear.z = nrx->mIsoVoZ;
@@ -373,25 +351,6 @@ geometry_msgs::msg::TwistStamped velocity_lidar(const NComRxC *nrx,
 
   return msg;
 }
-
-// geometry_msgs::msg::TwistStamped velocity_vehicle(const NComRxC *nrx,
-//                                                   std_msgs::msg::Header head) {
-//   auto msg = geometry_msgs::msg::TwistStamped();
-//   msg.header = std::move(head);
-
-//   auto veh_v = tf2::Vector3(nrx->mIsoVoX, nrx->mIsoVoY, nrx->mIsoVoZ);
-//   auto veh_w = tf2::Vector3(nrx->mIsoWoX, nrx->mIsoWoY, nrx->mIsoWoZ);
-  
-//   // std::cout << "veh_w = " << veh_w.getX() << ", " << veh_w.getY() << ", " << veh_w.getZ() << std::endl;
-//   msg.twist.linear.x = veh_v.getX();
-//   msg.twist.linear.y = veh_v.getY();
-//   msg.twist.linear.z = veh_v.getZ();
-//   msg.twist.angular.x = veh_w.getX(); 
-//   msg.twist.angular.y = veh_w.getY();
-//   msg.twist.angular.z = -veh_w.getZ(); //Wrong sign from NCOM??. TODO: check above
-
-//   return msg;
-// }
 
 tf2::Matrix3x3 getRotEnuToEcef(double lat0, double lon0) {
   double lambda = (lon0)*NAV_CONST::DEG2RADS;
@@ -505,15 +464,6 @@ nav_msgs::msg::Odometry odometry_vehicle(const NComRxC *nrx,
   msg.pose.pose.position.x = p_lrf.x();
   msg.pose.pose.position.y = p_lrf.y();
   msg.pose.pose.position.z = p_lrf.z();
-
-  // auto rpyIso = tf2::Quaternion();
-  // rpyIso.setRPY(nrx->mIsoRoll, nrx->mIsoPitch, nrx->mIsoYaw);
-
-  // msg.pose.pose.orientation.x = rpyIso.x();
-  // msg.pose.pose.orientation.y = rpyIso.y();
-  // msg.pose.pose.orientation.z = rpyIso.z();
-  // msg.pose.pose.orientation.w = rpyIso.w();
-
 
   auto rpyVehENU = RosNComWrapper::getIsoVehRPY(nrx);
   auto rpyVehLRF = tf2::Quaternion();
