@@ -32,6 +32,8 @@ Panels:
       - /Current View1
     Name: Views
     Splitter Ratio: 0.5
+  - Class: oxts_rviz_plugins/StatusPanel
+    Name: StatusPanel
 Visualization Manager:
   Class: ""
   Displays:
