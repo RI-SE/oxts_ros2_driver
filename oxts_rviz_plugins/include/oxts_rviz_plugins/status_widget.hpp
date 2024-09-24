@@ -31,7 +31,7 @@ class StatusWidget : public QWidget {
 
    private:
 	rclcpp::Subscription<oxts_msgs::msg::Ncom>::SharedPtr subNcom_;
-	std::string subTopic = "/ins/ncom";
+	std::string subTopic = "/oxts/ncom";
 	void ncomCallback(const oxts_msgs::msg::Ncom::SharedPtr msg);
 
 	void initLayout();

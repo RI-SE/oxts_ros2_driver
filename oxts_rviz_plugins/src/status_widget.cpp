@@ -62,7 +62,7 @@ void StatusWidget::updateTopic() {
  */
 void StatusWidget::initLayout() {
 	TopicEditor = new QLineEdit(this);
-	TopicEditor->setPlaceholderText("/ins/ncom");
+	TopicEditor->setPlaceholderText(QString::fromStdString((subTopic)));
 	TopicEditor->setToolTip("Enter topic to subscribe to then press enter");
 
 	TopicLabel = new QTextLabel(this, "NCOM Topic:");
