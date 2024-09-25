@@ -23,6 +23,11 @@ void StatusPanel::save(rviz_common::Config config) const {
 
 void StatusPanel::load(const rviz_common::Config& conf) {
 	Panel::load(conf);
+	QString ncomTopic;
+	if (conf.mapGetString("ncomTopic", &ncomTopic)){
+		_widget->TopicEditor->setText(ncomTopic);
+		_widget->updateTopic();
+	}
 }
 
 void StatusPanel::onInitialize() {
