@@ -4,6 +4,8 @@ A ROS2 driver which allows an OxTS INS to interact with a wider ROS network.
 
 The ROS driver has been built with ROS release Humble.
 
+This fork includes two transformations to output odometry and velocity data in vehicle frame (ISO8855) and Lidar frame. It also includes a status panel plugin for rviz.
+
 ## Build from source
 
 Dependencies:
